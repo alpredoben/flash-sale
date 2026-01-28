@@ -34,9 +34,13 @@
   "files.trimTrailingWhitespace": true,
   "files.insertFinalNewline": true,
   "cSpell.words": [
+    "fanout",
     "ILIKE",
+    "Millis",
+    "nosniff",
     "setex",
     "smhdwy",
+    "superadmin",
     "timestamptz"
   ]
 }
