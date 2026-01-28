@@ -35,7 +35,7 @@
     // Recommended Options
     "strict": true,
     "jsx": "react-jsx",
-    "verbatimModuleSyntax": true,
+    "verbatimModuleSyntax": false,
     "isolatedModules": true,
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
@@ -78,11 +78,9 @@
       "@validators/*": [
         "src/shared/validators/*"
       ],
-
       "@types/*": [
         "src/types/*"
       ],
-
       "@events/*": [
         "src/features/events/*"
       ],
@@ -94,7 +92,10 @@
       ],
       "@jobs/*": [
         "src/features/jobs/*"
-      ]
+      ],
+      "@interfaces/*": [
+        "src/interfaces/*"
+      ],
     }
   },
   "include": [
