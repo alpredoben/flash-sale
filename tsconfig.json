@@ -99,6 +99,9 @@
       "@docs/*": [
         "src/docs/*"
       ],
+      "@constants/*": [
+        "src/shared/constants/*"
+      ],
     }
   },
   "include": [

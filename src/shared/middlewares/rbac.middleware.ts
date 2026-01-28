@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import apiResponse from '@utils/response.util';
-import logger from '../utils/logger.util';
+import logger from '@utils/logger.util';
+import { User } from '@models/user.model';
 
 const ADMIN_SPECIAL_NAME = ['admin', 'super_admin', 'superadmin'];
 
@@ -147,7 +148,6 @@ class RBACMiddleware {
   ): void => {
     this.requireRole('super_admin', 'superadmin')(req, res, next);
   };
-
 
   /**
    * Check if user can access based on custom condition
@@ -341,6 +341,46 @@ class RBACMiddleware {
    */
   public isAdmin(user: any): boolean {
     return this.hasAnyRole(user, ADMIN_SPECIAL_NAME);
+  }
+
+  public extractUserPermissions(user: User): string[] {
+    if (!user.roles || user.roles.length === 0) {
+      return [];
+    }
+
+    const permissionSet = new Set<string>();
+
+    user.roles.forEach((role) => {
+      if (role.permissions && role.isActive) {
+        role.permissions.forEach((permission) => {
+          if (permission.isActive) {
+            permissionSet.add(permission.slug);
+          }
+        });
+      }
+    });
+
+    return Array.from(permissionSet);
+  }
+
+  public extractUserPermissionNames(user: User): string[] {
+    if (!user.roles || user.roles.length === 0) {
+      return [];
+    }
+
+    const permissionSet = new Set<string>();
+
+    user.roles.forEach((role) => {
+      if (role.permissions && role.isActive) {
+        role.permissions.forEach((permission) => {
+          if (permission.isActive) {
+            permissionSet.add(permission.name);
+          }
+        });
+      }
+    });
+
+    return Array.from(permissionSet);
   }
 }
 

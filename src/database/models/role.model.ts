@@ -1,9 +1,9 @@
 import { Column, Entity, Index, JoinTable, ManyToMany } from 'typeorm';
-import { BaseEntity } from './baseEntity.model';
-import { TableNames } from '@/shared/constants/tableName.constant';
-import { En_RoleType } from '@/shared/constants/enum.constant';
-import { User } from './user.model';
-import { Permission } from './permission.model';
+import { BaseEntity } from '@models/baseEntity.model';
+import { TableNames } from '@constants/tableName.constant';
+import { En_RoleType } from '@constants/enum.constant';
+import { User } from '@models/user.model';
+import { Permission } from '@models/permission.model';
 
 @Entity(TableNames.Role)
 @Index(['name'], { unique: true })
@@ -28,9 +28,6 @@ export class Role extends BaseEntity {
 
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive: boolean;
-
-  @Column({ type: 'int', default: 0 })
-  priority: number;
 
   @ManyToMany(() => User, (user: User) => user.roles)
   users: User[];

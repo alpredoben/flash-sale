@@ -1,11 +1,11 @@
 import { Entity, Column, Index, ManyToMany } from 'typeorm';
-import { BaseEntity } from './baseEntity.model';
-import { Role } from './role.model';
-import { TableNames } from '@/shared/constants/tableName.constant';
+import { BaseEntity } from '@models/baseEntity.model';
+import { Role } from '@models/role.model';
+import { TableNames } from '@constants/tableName.constant';
 import {
   En_PermissionAction,
   En_PermissionCategory,
-} from '@/shared/constants/enum.constant';
+} from '@constants/enum.constant';
 
 @Entity(TableNames.Permission)
 @Index(['name'], { unique: true })

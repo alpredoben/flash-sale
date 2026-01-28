@@ -1,7 +1,7 @@
-import { En_ItemStatus } from '@/shared/constants/enum.constant';
-import { TableNames } from '@/shared/constants/tableName.constant';
+import { En_ItemStatus } from '@constants/enum.constant';
+import { TableNames } from '@constants/tableName.constant';
 import { BaseEntity, Column, Entity, Index, OneToMany } from 'typeorm';
-import { Reservation } from './reservation.model';
+import { Reservation } from '@models/reservation.model';
 
 @Entity(TableNames.Item)
 @Index(['sku'], { unique: true })

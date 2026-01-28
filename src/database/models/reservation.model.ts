@@ -1,9 +1,9 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
-import { BaseEntity } from './baseEntity.model';
-import { TableNames } from '@/shared/constants/tableName.constant';
-import { En_ReservationStatus } from '@/shared/constants/enum.constant';
-import { Item } from './item.model';
-import { User } from './user.model';
+import { BaseEntity } from '@models/baseEntity.model';
+import { TableNames } from '@constants/tableName.constant';
+import { En_ReservationStatus } from '@constants/enum.constant';
+import { Item } from '@models/item.model';
+import { User } from '@models/user.model';
 
 @Entity(TableNames.Reservation)
 @Index(['userId', 'itemId'])

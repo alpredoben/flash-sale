@@ -1,7 +1,3 @@
-export enum En_RoleName {
-  ADMIN = 'admin',
-  USER = 'user'
-}
 
 export enum En_ItemStatus {
   ACTIVE = 'active',

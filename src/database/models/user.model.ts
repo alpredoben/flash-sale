@@ -10,6 +10,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import { Role } from './role.model';
+import { Reservation } from './reservation.model';
 
 @Entity(TableNames.User)
 @Index(['email'], { unique: true })
@@ -85,25 +86,8 @@ export class User extends BaseEntity {
   @Column({ name: 'last_login', type: 'timestamp', nullable: true })
   lastLogin?: Date;
 
-  @Column({ name: 'failed_login_attempts', type: 'int', default: 0 })
-  failedLoginAttempts: number;
-
-  @Column({ name: 'locked_until', type: 'timestamp', nullable: true })
-  lockedUntil?: Date;
-
-  @Column({ name: 'two_factor_enabled', type: 'boolean', default: false })
-  twoFactorEnabled: boolean;
-
-  @Column({
-    name: 'two_factor_secret',
-    type: 'varchar',
-    nullable: true,
-    select: false,
-  })
-  twoFactorSecret?: string;
-
-  // @OneToMany(() => Reservation, (reservation) => reservation.user)
-  // reservations: Reservation[];
+  @OneToMany(() => Reservation, (reservation) => reservation.user)
+  reservations: Reservation[];
 
   // @OneToMany(() => RefreshToken, (token) => token.user)
   // refreshTokens: RefreshToken[];
@@ -151,13 +135,5 @@ export class User extends BaseEntity {
 
   isActive(): boolean {
     return this.status === En_UserStatus.ACTIVE;
-  }
-
-  isLocked(): boolean {
-    return this.lockedUntil ? new Date() < this.lockedUntil : false;
-  }
-
-  canLogin(): boolean {
-    return this.isActive() && !this.isLocked() && this.emailVerified;
   }
 }
