@@ -6,8 +6,8 @@ export interface In_AuthResponse {
     firstName: string;
     lastName: string;
     email: string;
-    phone?: string;
-    avatar?: string;
+    phone?: string | null;
+    avatar?: string | null;
     roles: string[];
     status: string;
     emailVerified: boolean;

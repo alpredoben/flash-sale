@@ -18,5 +18,3 @@ export interface In_PaginationParams {
   search?: string;
   filters?: Record<string, any>;
 }
-
-

@@ -1,7 +1,7 @@
 import jwt, { SignOptions, VerifyOptions } from 'jsonwebtoken';
 import env from '@config/env.config';
 import logger from './logger.util';
-import { In_DecodedToken, In_TokenPayload } from '@interfaces/util.interface';
+import { In_DecodedToken, In_TokenPayload } from '@interfaces/auth.interface';
 
 class Tokenizer {
   private static instance: Tokenizer;

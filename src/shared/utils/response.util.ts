@@ -239,16 +239,15 @@ class ApiResponse {
    */
   public sendSuccess<T>(
     res: Response,
-    statusCode: number,
     message: string,
     data?: T,
     meta?: Partial<In_ApiResponseMeta>
   ): Response {
     const response = this.success(message, data, {
-      statusCode,
+      statusCode: 200,
       ...meta,
     });
-    return res.status(statusCode).json(response);
+    return res.status(200).json(response);
   }
 
   /**

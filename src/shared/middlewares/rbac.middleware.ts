@@ -1,9 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import apiResponse from '@utils/response.util';
 import logger from '@utils/logger.util';
-import { User } from '@models/user.model';
-
-const ADMIN_SPECIAL_NAME = ['admin', 'super_admin', 'superadmin'];
+import userRepository from '@repositories/user.repository';
 
 class RBACMiddleware {
   private static instance: RBACMiddleware;
@@ -18,369 +16,358 @@ class RBACMiddleware {
   }
 
   /**
-   * Check if user has required role
+   * Check if user has specific role(s)
+   * @param roles - Array of role names or single role name
+   * @param requireAll - If true, user must have all roles. If false, user needs at least one role
    */
-  public requireRole = (...requiredRoles: string[]) => {
-    return (req: Request, res: Response, next: NextFunction): void => {
+  requireRole = (roles: string | string[], requireAll: boolean = false) => {
+    return async (
+      req: Request,
+      res: Response,
+      next: NextFunction
+    ): Promise<void> => {
       try {
+        // Check if user is authenticated
         if (!req.user) {
           apiResponse.sendUnauthorized(res, 'Authentication required');
           return;
         }
 
-        const userRoles = this.getUserRoles(req.user);
+        // Convert single role to array
+        const requiredRoles = Array.isArray(roles) ? roles : [roles];
 
-        if (!userRoles || userRoles.length === 0) {
-          logger.warn('User has no roles assigned', { userId: req.user.id });
-          apiResponse.sendForbidden(res, 'No roles assigned to user');
-          return;
+        // Get user roles
+        const userRoles = req.user.roles || [];
+
+        // Check if user has required role(s)
+        let hasAccess = false;
+
+        if (requireAll) {
+          // User must have all required roles
+          hasAccess = requiredRoles.every((role) => userRoles.includes(role));
+        } else {
+          // User needs at least one required role
+          hasAccess = requiredRoles.some((role) => userRoles.includes(role));
         }
 
-        // Check if user has any of the required roles
-        const hasRole = requiredRoles.some((requiredRole) =>
-          userRoles.some(
-            (userRole) =>
-              this.normalizeRole(userRole) === this.normalizeRole(requiredRole)
-          )
-        );
-
-        if (!hasRole) {
-          logger.warn('User lacks required role', {
+        if (!hasAccess) {
+          logger.warn('Access denied - insufficient role', {
             userId: req.user.id,
             userRoles,
             requiredRoles,
+            requireAll,
           });
 
-          apiResponse.sendForbidden(res, 'Insufficient permissions', {
-            required: requiredRoles,
-            current: userRoles,
-          });
+          apiResponse.sendForbidden(
+            res,
+            'You do not have permission to access this resource'
+          );
           return;
         }
 
         logger.debug('Role check passed', {
           userId: req.user.id,
-          roles: userRoles,
+          userRoles,
+          requiredRoles,
         });
 
         next();
       } catch (error) {
-        logger.error('RBAC middleware error', {
+        logger.error('Role check error', {
           error: error instanceof Error ? error.message : 'Unknown error',
         });
-        apiResponse.sendInternalError(res, 'Authorization check failed');
+        apiResponse.sendInternalError(res, 'Authorization failed');
       }
     };
   };
 
   /**
-   * Check if user has all required roles
+   * Check if user has specific permission(s)
+   * @param permissions - Array of permission names or single permission name
+   * @param requireAll - If true, user must have all permissions. If false, user needs at least one permission
    */
-  public requireAllRoles = (...requiredRoles: string[]) => {
-    return (req: Request, res: Response, next: NextFunction): void => {
+  requirePermission = (
+    permissions: string | string[],
+    requireAll: boolean = false
+  ) => {
+    return async (
+      req: Request,
+      res: Response,
+      next: NextFunction
+    ): Promise<void> => {
       try {
+        // Check if user is authenticated
         if (!req.user) {
           apiResponse.sendUnauthorized(res, 'Authentication required');
           return;
         }
 
-        const userRoles = this.getUserRoles(req.user);
+        // Convert single permission to array
+        const requiredPermissions = Array.isArray(permissions)
+          ? permissions
+          : [permissions];
 
-        if (!userRoles || userRoles.length === 0) {
-          apiResponse.sendForbidden(res, 'No roles assigned to user');
+        // Get user permissions
+        let userPermissions = req.user.permissions || [];
+
+        // If permissions not in cached user, fetch from database
+        if (!userPermissions || userPermissions.length === 0) {
+          const user = await userRepository.findById(req.user.id);
+          if (user) {
+            userPermissions = this.extractPermissions(user.roles);
+          }
+        }
+
+        // Check if user has required permission(s)
+        let hasAccess = false;
+
+        if (requireAll) {
+          // User must have all required permissions
+          hasAccess = requiredPermissions.every((permission) =>
+            userPermissions.includes(permission)
+          );
+        } else {
+          // User needs at least one required permission
+          hasAccess = requiredPermissions.some((permission) =>
+            userPermissions.includes(permission)
+          );
+        }
+
+        if (!hasAccess) {
+          logger.warn('Access denied - insufficient permission', {
+            userId: req.user.id,
+            userPermissions,
+            requiredPermissions,
+            requireAll,
+          });
+
+          apiResponse.sendForbidden(
+            res,
+            'You do not have permission to perform this action'
+          );
           return;
         }
 
-        // Check if user has all required roles
-        const hasAllRoles = requiredRoles.every((requiredRole) =>
-          userRoles.some(
-            (userRole) =>
-              this.normalizeRole(userRole) === this.normalizeRole(requiredRole)
-          )
+        logger.debug('Permission check passed', {
+          userId: req.user.id,
+          userPermissions,
+          requiredPermissions,
+        });
+
+        next();
+      } catch (error) {
+        logger.error('Permission check error', {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+        apiResponse.sendInternalError(res, 'Authorization failed');
+      }
+    };
+  };
+
+  /**
+   * Check if user has any of the specified roles OR permissions
+   * Useful for flexible access control
+   */
+  requireRoleOrPermission = (
+    roles: string | string[],
+    permissions: string | string[]
+  ) => {
+    return async (
+      req: Request,
+      res: Response,
+      next: NextFunction
+    ): Promise<void> => {
+      try {
+        // Check if user is authenticated
+        if (!req.user) {
+          apiResponse.sendUnauthorized(res, 'Authentication required');
+          return;
+        }
+
+        const requiredRoles = Array.isArray(roles) ? roles : [roles];
+        const requiredPermissions = Array.isArray(permissions)
+          ? permissions
+          : [permissions];
+
+        const userRoles = req.user.roles || [];
+        let userPermissions = req.user.permissions || [];
+
+        // If permissions not in cached user, fetch from database
+        if (!userPermissions || userPermissions.length === 0) {
+          const user = await userRepository.findById(req.user.id);
+          if (user) {
+            userPermissions = this.extractPermissions(user.roles);
+          }
+        }
+
+        // Check if user has any required role
+        const hasRole = requiredRoles.some((role) => userRoles.includes(role));
+
+        // Check if user has any required permission
+        const hasPermission = requiredPermissions.some((permission) =>
+          userPermissions.includes(permission)
         );
 
-        if (!hasAllRoles) {
-          logger.warn('User lacks all required roles', {
+        if (!hasRole && !hasPermission) {
+          logger.warn('Access denied - insufficient role or permission', {
             userId: req.user.id,
+            userRoles,
+            userPermissions,
+            requiredRoles,
+            requiredPermissions,
+          });
+
+          apiResponse.sendForbidden(
+            res,
+            'You do not have permission to access this resource'
+          );
+          return;
+        }
+
+        logger.debug('Role or permission check passed', {
+          userId: req.user.id,
+          hasRole,
+          hasPermission,
+        });
+
+        next();
+      } catch (error) {
+        logger.error('Role or permission check error', {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+        apiResponse.sendInternalError(res, 'Authorization failed');
+      }
+    };
+  };
+
+  /**
+   * Check if user is owner of resource
+   * @param getUserIdFromResource - Function to extract user ID from request
+   */
+  requireOwnership = (
+    getUserIdFromResource: (req: Request) => string | Promise<string>
+  ) => {
+    return async (
+      req: Request,
+      res: Response,
+      next: NextFunction
+    ): Promise<void> => {
+      try {
+        // Check if user is authenticated
+        if (!req.user) {
+          apiResponse.sendUnauthorized(res, 'Authentication required');
+          return;
+        }
+
+        // Get resource owner ID
+        const resourceOwnerId = await getUserIdFromResource(req);
+
+        // Check if user is owner
+        if (req.user.id !== resourceOwnerId) {
+          logger.warn('Access denied - not resource owner', {
+            userId: req.user.id,
+            resourceOwnerId,
+          });
+
+          apiResponse.sendForbidden(
+            res,
+            'You do not have permission to access this resource'
+          );
+          return;
+        }
+
+        logger.debug('Ownership check passed', {
+          userId: req.user.id,
+          resourceOwnerId,
+        });
+
+        next();
+      } catch (error) {
+        logger.error('Ownership check error', {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+        apiResponse.sendInternalError(res, 'Authorization failed');
+      }
+    };
+  };
+
+  /**
+   * Check if user is owner OR has specific role/permission
+   * Useful for allowing admins to access user resources
+   */
+  requireOwnershipOrRole = (
+    getUserIdFromResource: (req: Request) => string | Promise<string>,
+    roles: string | string[]
+  ) => {
+    return async (
+      req: Request,
+      res: Response,
+      next: NextFunction
+    ): Promise<void> => {
+      try {
+        // Check if user is authenticated
+        if (!req.user) {
+          apiResponse.sendUnauthorized(res, 'Authentication required');
+          return;
+        }
+
+        // Get resource owner ID
+        const resourceOwnerId = await getUserIdFromResource(req);
+
+        // Check if user is owner
+        const isOwner = req.user.id === resourceOwnerId;
+
+        // Check if user has required role
+        const requiredRoles = Array.isArray(roles) ? roles : [roles];
+        const userRoles = req.user.roles || [];
+        const hasRole = requiredRoles.some((role) => userRoles.includes(role));
+
+        if (!isOwner && !hasRole) {
+          logger.warn('Access denied - not owner and insufficient role', {
+            userId: req.user.id,
+            resourceOwnerId,
             userRoles,
             requiredRoles,
           });
 
           apiResponse.sendForbidden(
             res,
-            'Insufficient permissions - all roles required',
-            {
-              required: requiredRoles,
-              current: userRoles,
-            }
+            'You do not have permission to access this resource'
           );
           return;
         }
 
+        logger.debug('Ownership or role check passed', {
+          userId: req.user.id,
+          isOwner,
+          hasRole,
+        });
+
         next();
       } catch (error) {
-        logger.error('RBAC middleware error', {
+        logger.error('Ownership or role check error', {
           error: error instanceof Error ? error.message : 'Unknown error',
         });
-        apiResponse.sendInternalError(res, 'Authorization check failed');
+        apiResponse.sendInternalError(res, 'Authorization failed');
       }
     };
   };
 
   /**
-   * Check if user is admin
+   * Extract permissions from roles
    */
-  public requireAdmin = (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): void => {
-    this.requireRole('admin')(req, res, next);
-  };
+  private extractPermissions(roles: any[]): string[] {
+    const permissions = new Set<string>();
 
-  /**
-   * Check if user is super admin
-   */
-  public requireSuperAdmin = (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): void => {
-    this.requireRole('super_admin', 'superadmin')(req, res, next);
-  };
-
-  /**
-   * Check if user can access based on custom condition
-   */
-  public requireCondition = (
-    condition: (req: Request) => boolean,
-    errorMessage: string = 'Access denied'
-  ) => {
-    return (req: Request, res: Response, next: NextFunction): void => {
-      try {
-        if (!req.user) {
-          apiResponse.sendUnauthorized(res, 'Authentication required');
-          return;
-        }
-
-        if (!condition(req)) {
-          logger.warn('User failed custom condition check', {
-            userId: req.user.id,
-          });
-
-          apiResponse.sendForbidden(res, errorMessage);
-          return;
-        }
-
-        next();
-      } catch (error) {
-        logger.error('Condition check middleware error', {
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
-        apiResponse.sendInternalError(res, 'Authorization check failed');
-      }
-    };
-  };
-
-  /**
-   * Allow access to self or admin
-   */
-  public requireSelfOrAdmin = (userIdParam: string = 'id') => {
-    return (req: Request, res: Response, next: NextFunction): void => {
-      try {
-        if (!req.user) {
-          apiResponse.sendUnauthorized(res, 'Authentication required');
-          return;
-        }
-
-        const targetUserId = req.params[userIdParam];
-        const currentUserId = req.user.id;
-        const userRoles = this.getUserRoles(req.user);
-
-        const isAdmin = userRoles.some((role) =>
-          ADMIN_SPECIAL_NAME.includes(this.normalizeRole(role))
-        );
-
-        const isSelf = targetUserId === currentUserId;
-
-        if (!isSelf && !isAdmin) {
-          logger.warn("User attempted to access another user's resource", {
-            currentUserId,
-            targetUserId,
-          });
-
-          apiResponse.sendForbidden(
-            res,
-            'You can only access your own profile'
-          );
-          return;
-        }
-
-        next();
-      } catch (error) {
-        logger.error('Self or admin check middleware error', {
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
-        apiResponse.sendInternalError(res, 'Authorization check failed');
-      }
-    };
-  };
-
-  /**
-   * Restrict access for specific roles
-   */
-  public restrictRoles = (...restrictedRoles: string[]) => {
-    return (req: Request, res: Response, next: NextFunction): void => {
-      try {
-        if (!req.user) {
-          apiResponse.sendUnauthorized(res, 'Authentication required');
-          return;
-        }
-
-        const userRoles = this.getUserRoles(req.user);
-
-        const hasRestrictedRole = restrictedRoles.some((restrictedRole) =>
-          userRoles.some(
-            (userRole) =>
-              this.normalizeRole(userRole) ===
-              this.normalizeRole(restrictedRole)
-          )
-        );
-
-        if (hasRestrictedRole) {
-          logger.warn('User with restricted role attempted access', {
-            userId: req.user.id,
-            userRoles,
-            restrictedRoles,
-          });
-
-          apiResponse.sendForbidden(
-            res,
-            'Your role is not allowed to perform this action'
-          );
-          return;
-        }
-
-        next();
-      } catch (error) {
-        logger.error('Role restriction middleware error', {
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
-        apiResponse.sendInternalError(res, 'Authorization check failed');
-      }
-    };
-  };
-
-  /**
-   * Get user roles from user object
-   */
-  private getUserRoles(user: any): string[] {
-    if (!user) return [];
-
-    // Handle different role structures
-    if (Array.isArray(user.roles)) {
-      return user.roles
-        .map((role: any) => {
-          if (typeof role === 'string') return role;
-          if (role && role.name) return role.name;
-          return '';
-        })
-        .filter(Boolean);
-    }
-
-    if (user.role) {
-      return [typeof user.role === 'string' ? user.role : user.role.name];
-    }
-
-    return [];
-  }
-
-  /**
-   * Normalize role name (lowercase, remove spaces and underscores)
-   */
-  private normalizeRole(role: string): string {
-    return role.toLowerCase().replace(/[\s_-]/g, '');
-  }
-
-  /**
-   * Check if user has role
-   */
-  public hasRole(user: any, role: string): boolean {
-    const userRoles = this.getUserRoles(user);
-    return userRoles.some(
-      (userRole) => this.normalizeRole(userRole) === this.normalizeRole(role)
-    );
-  }
-
-  /**
-   * Check if user has any of the roles
-   */
-  public hasAnyRole(user: any, roles: string[]): boolean {
-    const userRoles = this.getUserRoles(user);
-    return roles.some((role) =>
-      userRoles.some(
-        (userRole) => this.normalizeRole(userRole) === this.normalizeRole(role)
-      )
-    );
-  }
-
-  /**
-   * Check if user has all roles
-   */
-  public hasAllRoles(user: any, roles: string[]): boolean {
-    const userRoles = this.getUserRoles(user);
-    return roles.every((role) =>
-      userRoles.some(
-        (userRole) => this.normalizeRole(userRole) === this.normalizeRole(role)
-      )
-    );
-  }
-
-  /**
-   * Check if user is admin
-   */
-  public isAdmin(user: any): boolean {
-    return this.hasAnyRole(user, ADMIN_SPECIAL_NAME);
-  }
-
-  public extractUserPermissions(user: User): string[] {
-    if (!user.roles || user.roles.length === 0) {
-      return [];
-    }
-
-    const permissionSet = new Set<string>();
-
-    user.roles.forEach((role) => {
-      if (role.permissions && role.isActive) {
-        role.permissions.forEach((permission) => {
-          if (permission.isActive) {
-            permissionSet.add(permission.slug);
-          }
+    roles.forEach((role) => {
+      if (role.permissions && Array.isArray(role.permissions)) {
+        role.permissions.forEach((permission: any) => {
+          permissions.add(permission.name);
         });
       }
     });
 
-    return Array.from(permissionSet);
-  }
-
-  public extractUserPermissionNames(user: User): string[] {
-    if (!user.roles || user.roles.length === 0) {
-      return [];
-    }
-
-    const permissionSet = new Set<string>();
-
-    user.roles.forEach((role) => {
-      if (role.permissions && role.isActive) {
-        role.permissions.forEach((permission) => {
-          if (permission.isActive) {
-            permissionSet.add(permission.name);
-          }
-        });
-      }
-    });
-
-    return Array.from(permissionSet);
+    return Array.from(permissions);
   }
 }
 
@@ -388,12 +375,3 @@ class RBACMiddleware {
 const rbacMiddleware = RBACMiddleware.getInstance();
 
 export default rbacMiddleware;
-
-// Export individual middleware functions
-export const requireRole = rbacMiddleware.requireRole;
-export const requireAllRoles = rbacMiddleware.requireAllRoles;
-export const requireAdmin = rbacMiddleware.requireAdmin;
-export const requireSuperAdmin = rbacMiddleware.requireSuperAdmin;
-export const requireCondition = rbacMiddleware.requireCondition;
-export const requireSelfOrAdmin = rbacMiddleware.requireSelfOrAdmin;
-export const restrictRoles = rbacMiddleware.restrictRoles;

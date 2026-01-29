@@ -1,12 +1,13 @@
 import { En_ItemStatus } from '@constants/enum.constant';
 import { TableNames } from '@constants/tableName.constant';
-import { BaseEntity, Column, Entity, Index, OneToMany } from 'typeorm';
+import { Column, Entity, Index, OneToMany } from 'typeorm';
 import { Reservation } from '@models/reservation.model';
+import { AppBaseEntity } from '@models/AppBaseEntity';
 
 @Entity(TableNames.Item)
 @Index(['sku'], { unique: true })
 @Index(['status'])
-export class Item extends BaseEntity {
+export class Item extends AppBaseEntity {
   @Column({ type: 'varchar', length: 100, unique: true })
   sku: string;
 

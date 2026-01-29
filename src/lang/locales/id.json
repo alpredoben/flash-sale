@@ -1,0 +1,34 @@
+{
+  "error": {
+    "validation": {
+      "data": "Data validation error",
+      "uuid": "{{field}} must be a UUID",
+      "import.max": "The number of rows that can be imported is {{row}} rows",
+      "required": "{{field}} must be filled",
+      "required.if": "{{field}} is required when {{field2}} is {{value2}}",
+      "string": "{{field}} must be of type string",
+      "email": "Invalid email input",
+      "password": "Password input must contain 1 Capital, 1 lowercase, 1 number, 1 symbol and minimal 8 character",
+      "num": "{{field}} must be of type number",
+      "num-max": "{{field}} must be of type number with max {{max}}",
+      "enum": "{{field}} must be {{enum}}",
+      "bool": "{{field}} must be of type boolean",
+      "min-max": "{{field}} must be between {{min}} and {{max}} characters",
+      "min": "{{field}} min {{min}} character",
+      "max": "{{field}} max {{max}} character",
+      "length": "{{field}} character length must be {{length}} digits",
+      "array": "{{field}} must be an array",
+      "in": "{{field}} must be one of {{in}}",
+      "invalid.type": "Invalid data type {{field}}",
+      "file.mime": "Invalid file mime type",
+      "file.extension": "Invalid file extension",
+      "alpanumeric": "{{field}} must be of alphanumeric type",
+      "can.deleted": "Deleting this data is not permitted",
+      "image": "The uploaded file path cannot be empty",
+      "only.one.status": "Only one piece of data can have Active status",
+      "date": "{{field}} format must be MM/DD/YYYY",
+      "gt": "{{field}} should not be greater than {{field2}}"
+    }
+  },
+  "success": {}
+}

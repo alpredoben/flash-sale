@@ -12,6 +12,7 @@ class EnvironmentConfig {
   public readonly appPort: number;
   public readonly appUrl: string;
   public readonly apiVersion: string;
+  public readonly appLang: string;
 
   // Database
   public readonly dbHost: string;
@@ -96,6 +97,7 @@ class EnvironmentConfig {
 
   private constructor() {
     // Application
+    this.appLang = process.env.APP_LANGUAGE ?? 'en';
     this.nodeEnv = process.env.NODE_ENV || 'development';
     this.appName = process.env.APP_NAME || 'Professional-REST-API';
     this.appPort = parseInt(process.env.APP_PORT || '3000', 10);

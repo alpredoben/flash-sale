@@ -1,0 +1,70 @@
+{
+  "error": {
+    "validation": {
+      "data": "Validation failed",
+      "uuid": "{{field}} must be a UUID",
+      "import.max": "The number of rows that can be imported is {{row}} rows",
+      "required": "{{field}} must be filled",
+      "required.if": "{{field}} is required when {{field2}} is {{value2}}",
+      "string": "{{field}} must be of type string",
+      "email": "Invalid email format",
+      "password": "Password input must contain 1 Capital, 1 lowercase, 1 number, 1 symbol and minimal 8 character",
+      "num": "{{field}} must be of type number",
+      "num-max": "{{field}} must be of type number with max {{max}}",
+      "enum": "{{field}} must be {{enum}}",
+      "bool": "{{field}} must be of type boolean",
+      "min-max": "{{field}} must be between {{min}} and {{max}} characters",
+      "min": "{{field}} min {{min}} character",
+      "max": "{{field}} max {{max}} character",
+      "length": "{{field}} character length must be {{length}} digits",
+      "array": "{{field}} must be an array",
+      "in": "{{field}} must be one of {{in}}",
+      "invalid.type": "Invalid data type {{field}}",
+      "file.mime": "Invalid file mime type",
+      "file.extension": "Invalid file extension",
+      "alpha-numeric": "{{field}} must be of alphanumeric type",
+      "can.deleted": "Deleting this data is not permitted",
+      "image": "The uploaded file path cannot be empty",
+      "only.one.status": "Only one piece of data can have Active status",
+      "date": "{{field}} format must be MM/DD/YYYY",
+      "gt": "{{field}} should not be greater than {{field2}}",
+      "letter-spaces": "{{field}} can only contain letters and spaces"
+    },
+    "auth": {
+      "required-token": "{{name}} is required"
+    }
+  },
+  "success": {
+    "default": {
+      "fetch": "{{name}} retrieved successfully"
+    },
+    "auth": {
+      "register": "Registration successfully. Please check your email to verify your account",
+      "login": "Login successfully",
+      "refresh-token": "Token refreshed successfully",
+      "verify-email": "Email verified successfully",
+      "forgot-password": "Request password reset success. You will receive a password reset link shortly.",
+      "reset-password": "Password reset successfully. You can now login with your new password.",
+      "change-password": "Password changed successfully",
+      "send-verified": "Verification email sent successfully. Please check your email."
+    },
+    "user": {
+      "fetch-profile": "Profile retrieved successfully"
+    },
+    "role": {
+      "fetch": "{{name}} retrieved successfully",
+      "create": "Role created successfully",
+      "update": "Role updated successfully",
+      "delete": "Role deleted successfully",
+      "assigned-permission": "Permissions assigned successfully",
+      "remove-permission": "Permissions removed successfully",
+      "statistic": "Role statistics retrieved successfully"
+    },
+    "permission": {
+      "fetch": "{{name}} retrieved successfully",
+      "create": "Permission created successfully",
+      "update": "Permission updated successfully",
+      "delete": "Permission deleted successfully"
+    }
+  }
+}

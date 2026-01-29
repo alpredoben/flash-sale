@@ -4,7 +4,8 @@ import cors from 'cors';
 import hpp from 'hpp';
 import compression from 'compression';
 import environment from '@config/env.config';
-import logger from '../utils/logger.util';
+import logger from '@utils/logger.util';
+import Translate from '@lang/index';
 
 class SecurityMiddleware {
   private static instance: SecurityMiddleware;
@@ -167,6 +168,17 @@ class SecurityMiddleware {
         });
         return res.redirect(301, `https://${req.headers.host}${req.url}`);
       }
+    }
+    next();
+  };
+
+  public setLanguage = (req: Request, res: Response, next: NextFunction) => {
+    if (req?.headers?.lang) {
+      const local: string | any = req?.headers?.lang;
+      Translate.setLocale(local);
+    } else {
+      Translate.setLocale(environment.appLang);
+      req.headers.lang = environment.appLang;
     }
     next();
   };
@@ -403,6 +415,7 @@ class SecurityMiddleware {
    */
   public setupSecurity = () => {
     return [
+      this.setLanguage,
       this.helmet(),
       this.cors(),
       this.hpp(),
@@ -426,6 +439,7 @@ export const corsPolicy = securityMiddleware.cors;
 export const hppProtection = securityMiddleware.hpp;
 export const compressionMiddleware = securityMiddleware.compression;
 export const customHeaders = securityMiddleware.customHeaders;
+export const setLanguage = securityMiddleware.setLanguage;
 export const enforceHttps = securityMiddleware.enforceHttps;
 export const preventClickjacking = securityMiddleware.preventClickjacking;
 export const validateContentType = securityMiddleware.validateContentType;

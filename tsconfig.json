@@ -24,7 +24,7 @@
     "declarationMap": true,
     // Stricter Typechecking Options
     "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
+    "exactOptionalPropertyTypes": false,
     // Style Options
     "noImplicitReturns": true,
     // "noImplicitOverride": true,
@@ -55,13 +55,13 @@
         "src/configs/*"
       ],
       "@controllers/*": [
-        "src/modules/controllers/*"
+        "src/app/controllers/*"
       ],
       "@services/*": [
-        "src/modules/services/*"
+        "src/app/services/*"
       ],
       "@repositories/*": [
-        "src/modules/repositories/*"
+        "src/app/repositories/*"
       ],
       "@models/*": [
         "src/database/models/*"
@@ -102,6 +102,9 @@
       "@constants/*": [
         "src/shared/constants/*"
       ],
+      "@lang/*": [
+        "src/lang/*"
+      ]
     }
   },
   "include": [

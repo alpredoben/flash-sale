@@ -1,5 +1,5 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
-import { BaseEntity } from '@models/baseEntity.model';
+import { AppBaseEntity } from '@models/AppBaseEntity';
 import { TableNames } from '@constants/tableName.constant';
 import { En_ReservationStatus } from '@constants/enum.constant';
 import { Item } from '@models/item.model';
@@ -9,7 +9,7 @@ import { User } from '@models/user.model';
 @Index(['userId', 'itemId'])
 @Index(['status'])
 @Index(['expiresAt'])
-export class Reservation extends BaseEntity {
+export class Reservation extends AppBaseEntity {
   @Column({ name: 'user_id', type: 'uuid' })
   userId: string;
 

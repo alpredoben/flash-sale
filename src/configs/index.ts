@@ -1,14 +1,8 @@
-/**
- * Central configuration export
- *
- * This file exports all configuration modules as a single point of access
- * for the entire application.
- */
-
-import env from '@config/env.config';
+import environment from '@config/env.config';
 import databaseConfig, { AppDataSource } from '@config/database.config';
 import redisConfig from '@config/redis.config';
 import rabbitmqConfig from '@config/rabbitmq.config';
+import mailConfig from '@/configs/smtp.config';
 import swaggerConfig from '@docs/swagger';
 
 /**
@@ -18,7 +12,7 @@ class Config {
   private static instance: Config;
   private initialized: boolean = false;
 
-  private constructor() {}
+  constructor() {}
 
   public static getInstance(): Config {
     if (!Config.instance) {
@@ -38,9 +32,9 @@ class Config {
 
     try {
       console.log('🚀 Initializing application configurations...');
-      console.log(`env: ${env.nodeEnv}`);
-      console.log(`App Name: ${env.appName}`);
-      console.log(`App URL: ${env.appUrl}`);
+      console.log(`Environment: ${environment.nodeEnv}`);
+      console.log(`App Name: ${environment.appName}`);
+      console.log(`App URL: ${environment.appUrl}`);
       console.log('─────────────────────────────────────────');
 
       // Initialize database connection
@@ -54,6 +48,10 @@ class Config {
       // Initialize RabbitMQ connection
       console.log('📦 Connecting to RabbitMQ...');
       await rabbitmqConfig.connect();
+
+      // Initialize mail service
+      console.log('📦 Initializing mail service...');
+      await mailConfig.connect();
 
       console.log('─────────────────────────────────────────');
       console.log('✅ All configurations initialized successfully');
@@ -91,6 +89,12 @@ class Config {
         await databaseConfig.disconnect();
       }
 
+      // Disconnect mail service
+      if (mailConfig.isMailConnected()) {
+        console.log('📦 Disconnecting mail service...');
+        await mailConfig.disconnect();
+      }
+
       console.log('─────────────────────────────────────────');
       console.log('✅ Application shutdown completed');
 
@@ -111,28 +115,35 @@ class Config {
       database: any;
       redis: any;
       rabbitmq: any;
+      mail: any;
     };
   }> {
-    const [databaseHealth, redisHealth, rabbitmqHealth] = await Promise.all([
-      databaseConfig.getHealthStatus().catch(() => ({
-        status: 'unhealthy' as const,
-        details: { message: 'Failed to check database health' },
-      })),
-      redisConfig.getHealthStatus().catch(() => ({
-        status: 'unhealthy' as const,
-        details: { message: 'Failed to check Redis health' },
-      })),
-      rabbitmqConfig.getHealthStatus().catch(() => ({
-        status: 'unhealthy' as const,
-        details: { message: 'Failed to check RabbitMQ health' },
-      })),
-    ]);
+    const [databaseHealth, redisHealth, rabbitmqHealth, mailHealth] =
+      await Promise.all([
+        databaseConfig.getHealthStatus().catch(() => ({
+          status: 'unhealthy' as const,
+          details: { message: 'Failed to check database health' },
+        })),
+        redisConfig.getHealthStatus().catch(() => ({
+          status: 'unhealthy' as const,
+          details: { message: 'Failed to check Redis health' },
+        })),
+        rabbitmqConfig.getHealthStatus().catch(() => ({
+          status: 'unhealthy' as const,
+          details: { message: 'Failed to check RabbitMQ health' },
+        })),
+        mailConfig.getHealthStatus().catch(() => ({
+          status: 'unhealthy' as const,
+          details: { message: 'Failed to check mail service health' },
+        })),
+      ]);
 
     // Determine overall status
     const services = {
       database: databaseHealth,
       redis: redisHealth,
       rabbitmq: rabbitmqHealth,
+      mail: mailHealth,
     };
 
     const healthStatuses = Object.values(services).map((s) => s.status);
@@ -165,31 +176,38 @@ class Config {
   }
 
   /**
-   * Get env configuration
+   * Get environment configuration
    */
-  public getEnv() {
-    return env;
+  private getEnvironment() {
+    return environment;
   }
 
   /**
    * Get database configuration
    */
-  public getDatabase() {
+  private getDatabase() {
     return databaseConfig;
   }
 
   /**
    * Get Redis configuration
    */
-  public getRedis() {
+  private getRedis() {
     return redisConfig;
   }
 
   /**
    * Get RabbitMQ configuration
    */
-  public getRabbitMQ() {
+  private getRabbitMQ() {
     return rabbitmqConfig;
+  }
+
+  /**
+   * Get mail configuration
+   */
+  private getMail() {
+    return mailConfig;
   }
 
   /**
@@ -200,18 +218,19 @@ class Config {
   }
 }
 
-// Export singleton instance
-const config = Config.getInstance();
-
 // Export individual configurations for direct access
 export {
-  env,
+  environment,
   databaseConfig,
   AppDataSource,
   redisConfig,
   rabbitmqConfig,
+  mailConfig,
   swaggerConfig,
 };
+
+// Export singleton instance
+const config = Config.getInstance();
 
 // Export main config instance
 export default config;

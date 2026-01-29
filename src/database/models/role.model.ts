@@ -1,5 +1,5 @@
 import { Column, Entity, Index, JoinTable, ManyToMany } from 'typeorm';
-import { BaseEntity } from '@models/baseEntity.model';
+import { AppBaseEntity } from '@models/AppBaseEntity';
 import { TableNames } from '@constants/tableName.constant';
 import { En_RoleType } from '@constants/enum.constant';
 import { User } from '@models/user.model';
@@ -9,7 +9,7 @@ import { Permission } from '@models/permission.model';
 @Index(['name'], { unique: true })
 @Index(['slug'], { unique: true })
 @Index(['type'])
-export class Role extends BaseEntity {
+export class Role extends AppBaseEntity {
   @Column({ type: 'varchar', length: 50, unique: true })
   name: string;
 

@@ -1,7 +1,6 @@
 import { En_UserStatus } from '@/shared/constants/enum.constant';
 import { TableNames } from '@/shared/constants/tableName.constant';
 import {
-  BaseEntity,
   Column,
   Entity,
   Index,
@@ -11,11 +10,12 @@ import {
 } from 'typeorm';
 import { Role } from './role.model';
 import { Reservation } from './reservation.model';
+import { AppBaseEntity } from '@models/AppBaseEntity';
 
 @Entity(TableNames.User)
 @Index(['email'], { unique: true })
 @Index(['status'])
-export class User extends BaseEntity {
+export class User extends AppBaseEntity {
   @Column({ name: 'first_name', type: 'varchar', length: 100 })
   firstName: string;
 
@@ -59,14 +59,14 @@ export class User extends BaseEntity {
     nullable: true,
     select: false,
   })
-  emailVerificationToken?: string;
+  emailVerificationToken?: string | null;
 
   @Column({
     name: 'email_verification_expires',
     type: 'timestamp',
     nullable: true,
   })
-  emailVerificationExpires?: Date;
+  emailVerificationExpires?: Date | null;
 
   @Column({
     name: 'password_reset_token',
@@ -74,14 +74,14 @@ export class User extends BaseEntity {
     nullable: true,
     select: false,
   })
-  passwordResetToken?: string;
+  passwordResetToken?: string | null;
 
   @Column({
     name: 'password_reset_expires',
     type: 'timestamp',
     nullable: true,
   })
-  passwordResetExpires?: Date;
+  passwordResetExpires?: Date | null;
 
   @Column({ name: 'last_login', type: 'timestamp', nullable: true })
   lastLogin?: Date;

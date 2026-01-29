@@ -17,6 +17,7 @@ export enum En_UserStatus {
   INACTIVE = 'inactive',
   SUSPENDED = 'suspended',
   PENDING_VERIFICATION = 'pending_verification',
+  BANNED = 'banned'
 }
 
 export enum En_RoleType {

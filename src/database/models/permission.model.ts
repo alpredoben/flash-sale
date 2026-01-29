@@ -1,5 +1,5 @@
 import { Entity, Column, Index, ManyToMany } from 'typeorm';
-import { BaseEntity } from '@models/baseEntity.model';
+import { AppBaseEntity } from '@models/AppBaseEntity';
 import { Role } from '@models/role.model';
 import { TableNames } from '@constants/tableName.constant';
 import {
@@ -12,7 +12,7 @@ import {
 @Index(['slug'], { unique: true })
 @Index(['category'])
 @Index(['resource'])
-export class Permission extends BaseEntity {
+export class Permission extends AppBaseEntity {
   @Column({ type: 'varchar', length: 100, unique: true })
   name: string;
 

@@ -57,8 +57,8 @@ class Encryption {
   /**
    * Generate random token
    */
-  public generateToken(length: number = 32): string {
-    return crypto.randomBytes(length).toString('hex');
+  public generateToken(length: number = 32, typeName: any = 'hex'): string {
+    return crypto.randomBytes(length).toString(typeName);
   }
 
   /**
