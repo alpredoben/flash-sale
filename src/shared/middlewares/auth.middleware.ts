@@ -1,10 +1,12 @@
+// src/shared/middlewares/auth.middleware.ts
 import { Request, Response, NextFunction } from 'express';
 import tokenizer from '@utils/tokenizer.util';
 import caching from '@config/caching.config';
 import apiResponse from '@utils/response.util';
 import logger from '@utils/logger.util';
+import lang from '@lang/index';
 
-// Extend Express Request type to include user
+// Extend Express Request type to include user and token
 declare global {
   namespace Express {
     interface Request {
@@ -28,6 +30,7 @@ class AuthMiddleware {
 
   /**
    * Authenticate user via JWT token
+   * Verifies the token and attaches user data to request
    */
   public authenticate = async (
     req: Request,
@@ -40,7 +43,7 @@ class AuthMiddleware {
       const token = tokenizer.extractTokenFromHeader(authHeader);
 
       if (!token) {
-        apiResponse.sendUnauthorized(res, 'Access token is required', {
+        apiResponse.sendUnauthorized(res, lang.__('error.auth.no-token'), {
           auth: 'No token provided',
         });
         return;
@@ -49,7 +52,7 @@ class AuthMiddleware {
       // Check if token is blacklisted
       const isBlacklisted = await this.isTokenBlacklisted(token);
       if (isBlacklisted) {
-        apiResponse.sendUnauthorized(res, 'Token has been revoked', {
+        apiResponse.sendUnauthorized(res, lang.__('error.auth.token-revoked'), {
           auth: 'Token is blacklisted',
         });
         return;
@@ -71,7 +74,7 @@ class AuthMiddleware {
       // Check if user is cached
       let user = await caching.getCachedUser(decoded.userId);
 
-      // If not cached, fetch from database (this will be implemented in UserRepository)
+      // If not cached, fetch from database and cache
       if (!user) {
         user = {
           id: decoded.userId,
@@ -79,8 +82,8 @@ class AuthMiddleware {
           roles: decoded.roles || [],
         };
 
-        // Cache user data
-        await caching.cacheUser(decoded.userId, user, 1800); // 30 minutes
+        // Cache user data for 30 minutes
+        await caching.cacheUser(decoded.userId, user, 1800);
       }
 
       // Attach user and token to request
@@ -90,19 +93,163 @@ class AuthMiddleware {
       logger.debug('User authenticated', {
         userId: user.id,
         email: user.email,
+        roles: user.roles,
       });
 
       next();
     } catch (error) {
       logger.error('Authentication error', {
         error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
       });
       apiResponse.sendInternalError(res, 'Authentication failed');
     }
   };
 
   /**
+   * Authorize user based on roles
+   * Checks if authenticated user has required role(s)
+   *
+   * @param roles - Array of role names that are allowed
+   * @param requireAll - If true, user must have ALL roles. If false, user needs ANY role (default: false)
+   *
+   * Usage:
+   *   router.post('/items', authMiddleware.authenticate, authMiddleware.authorize(['admin']), ...)
+   *   router.get('/items', authMiddleware.authenticate, authMiddleware.authorize(['admin', 'manager']), ...)
+   */
+  public authorize = (roles: string[], requireAll: boolean = false) => {
+    return (req: Request, res: Response, next: NextFunction): void => {
+      try {
+        // Check if user is authenticated
+        if (!req.user) {
+          apiResponse.sendUnauthorized(
+            res,
+            lang.__('error.auth.authentication-required')
+          );
+          return;
+        }
+
+        // Get user roles
+        const userRoles: string[] = req.user.roles || [];
+
+        // Check if user has required role(s)
+        let hasPermission = false;
+
+        if (requireAll) {
+          // User must have ALL specified roles
+          hasPermission = roles.every((role) =>
+            userRoles.some(
+              (userRole) => userRole.toLowerCase() === role.toLowerCase()
+            )
+          );
+        } else {
+          // User must have ANY of the specified roles
+          hasPermission = roles.some((role) =>
+            userRoles.some(
+              (userRole) => userRole.toLowerCase() === role.toLowerCase()
+            )
+          );
+        }
+
+        if (!hasPermission) {
+          logger.warn('Authorization failed - insufficient permissions', {
+            userId: req.user.id,
+            userRoles,
+            requiredRoles: roles,
+            path: req.path,
+          });
+
+          apiResponse.sendForbidden(
+            res,
+            lang.__('error.auth.insufficient-permissions'),
+            {
+              required: roles,
+              current: userRoles,
+            }
+          );
+          return;
+        }
+
+        logger.debug('User authorized', {
+          userId: req.user.id,
+          roles: userRoles,
+          requiredRoles: roles,
+        });
+
+        next();
+      } catch (error) {
+        logger.error('Authorization error', {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined,
+        });
+        apiResponse.sendInternalError(res, 'Authorization failed');
+      }
+    };
+  };
+
+  /**
+   * Check if user has specific permission(s)
+   * More granular than role-based authorization
+   *
+   * @param permissions - Array of permission names
+   * @param requireAll - If true, user must have ALL permissions (default: false)
+   */
+  public checkPermissions = (
+    permissions: string[],
+    requireAll: boolean = false
+  ) => {
+    return (req: Request, res: Response, next: NextFunction): void => {
+      try {
+        if (!req.user) {
+          apiResponse.sendUnauthorized(
+            res,
+            lang.__('error.auth.authentication-required')
+          );
+          return;
+        }
+
+        const userPermissions: string[] = req.user.permissions || [];
+
+        let hasPermission = false;
+
+        if (requireAll) {
+          hasPermission = permissions.every((permission) =>
+            userPermissions.includes(permission)
+          );
+        } else {
+          hasPermission = permissions.some((permission) =>
+            userPermissions.includes(permission)
+          );
+        }
+
+        if (!hasPermission) {
+          logger.warn('Permission check failed', {
+            userId: req.user.id,
+            userPermissions,
+            requiredPermissions: permissions,
+            path: req.path,
+          });
+
+          apiResponse.sendForbidden(res, 'Insufficient permissions', {
+            required: permissions,
+            current: userPermissions,
+          });
+          return;
+        }
+
+        next();
+      } catch (error) {
+        logger.error('Permission check error', {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+        apiResponse.sendInternalError(res, 'Permission check failed');
+      }
+    };
+  };
+
+  /**
    * Optional authentication (doesn't fail if no token)
+   * Useful for endpoints that work with or without authentication
    */
   public optionalAuth = async (
     req: Request,
@@ -170,7 +317,11 @@ class AuthMiddleware {
       // Verify refresh token
       try {
         const decoded = tokenizer.verifyRefreshToken(refreshToken);
-        req.user = { id: decoded.userId, email: decoded.email };
+        req.user = {
+          id: decoded.userId,
+          email: decoded.email,
+          roles: decoded.roles || [],
+        };
         req.token = refreshToken;
         next();
       } catch (error) {
@@ -187,7 +338,7 @@ class AuthMiddleware {
   };
 
   /**
-   * Check if user is authenticated
+   * Check if user is authenticated (simple check)
    */
   public requireAuth = (
     req: Request,
@@ -195,7 +346,10 @@ class AuthMiddleware {
     next: NextFunction
   ): void => {
     if (!req.user) {
-      apiResponse.sendUnauthorized(res, 'Authentication required');
+      apiResponse.sendUnauthorized(
+        res,
+        lang.__('error.auth.authentication-required')
+      );
       return;
     }
     next();
@@ -210,7 +364,10 @@ class AuthMiddleware {
     next: NextFunction
   ): void => {
     if (!req.user) {
-      apiResponse.sendUnauthorized(res, 'Authentication required');
+      apiResponse.sendUnauthorized(
+        res,
+        lang.__('error.auth.authentication-required')
+      );
       return;
     }
 
@@ -233,7 +390,10 @@ class AuthMiddleware {
     next: NextFunction
   ): void => {
     if (!req.user) {
-      apiResponse.sendUnauthorized(res, 'Authentication required');
+      apiResponse.sendUnauthorized(
+        res,
+        lang.__('error.auth.authentication-required')
+      );
       return;
     }
 
@@ -245,6 +405,62 @@ class AuthMiddleware {
     }
 
     next();
+  };
+
+  /**
+   * Check if user owns the resource
+   * Compares user ID with resource owner ID
+   *
+   * @param getResourceOwnerId - Function to extract owner ID from request
+   */
+  public checkOwnership = (
+    getResourceOwnerId: (req: Request) => string | Promise<string>
+  ) => {
+    return async (
+      req: Request,
+      res: Response,
+      next: NextFunction
+    ): Promise<void> => {
+      try {
+        if (!req.user) {
+          apiResponse.sendUnauthorized(
+            res,
+            lang.__('error.auth.authentication-required')
+          );
+          return;
+        }
+
+        const resourceOwnerId = await getResourceOwnerId(req);
+
+        if (req.user.id !== resourceOwnerId) {
+          // Check if user is admin (admins can access any resource)
+          const isAdmin = req.user.roles?.some(
+            (role: string) => role.toLowerCase() === 'admin'
+          );
+
+          if (!isAdmin) {
+            logger.warn('Ownership check failed', {
+              userId: req.user.id,
+              resourceOwnerId,
+              path: req.path,
+            });
+
+            apiResponse.sendForbidden(
+              res,
+              'You do not have permission to access this resource'
+            );
+            return;
+          }
+        }
+
+        next();
+      } catch (error) {
+        logger.error('Ownership check error', {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+        apiResponse.sendInternalError(res, 'Ownership check failed');
+      }
+    };
   };
 
   /**
@@ -356,6 +572,53 @@ class AuthMiddleware {
     }
     next();
   };
+
+  /**
+   * Rate limit per user (in addition to IP-based rate limiting)
+   */
+  public userRateLimit = (options: {
+    windowMs: number;
+    maxRequests: number;
+    message?: string;
+  }) => {
+    const attempts: Map<string, { count: number; resetTime: number }> =
+      new Map();
+
+    return (req: Request, res: Response, next: NextFunction): void => {
+      if (!req.user) {
+        next();
+        return;
+      }
+
+      const userId = req.user.id;
+      const now = Date.now();
+      const userAttempts = attempts.get(userId);
+
+      if (!userAttempts || now > userAttempts.resetTime) {
+        // Reset counter
+        attempts.set(userId, {
+          count: 1,
+          resetTime: now + options.windowMs,
+        });
+        next();
+        return;
+      }
+
+      if (userAttempts.count >= options.maxRequests) {
+        const retryAfter = Math.ceil((userAttempts.resetTime - now) / 1000);
+        res.setHeader('Retry-After', retryAfter.toString());
+
+        apiResponse.sendRateLimit(
+          res,
+          options.message || 'Too many requests. Please try again later.'
+        );
+        return;
+      }
+
+      userAttempts.count++;
+      next();
+    };
+  };
 }
 
 // Export singleton instance
@@ -365,11 +628,15 @@ export default authMiddleware;
 
 // Export individual middleware functions for convenience
 export const authenticate = authMiddleware.authenticate;
+export const authorize = authMiddleware.authorize;
+export const checkPermissions = authMiddleware.checkPermissions;
 export const optionalAuth = authMiddleware.optionalAuth;
 export const verifyRefreshToken = authMiddleware.verifyRefreshToken;
 export const requireAuth = authMiddleware.requireAuth;
 export const requireEmailVerified = authMiddleware.requireEmailVerified;
 export const requireActiveAccount = authMiddleware.requireActiveAccount;
+export const checkOwnership = authMiddleware.checkOwnership;
 export const verifyApiKey = authMiddleware.verifyApiKey;
 export const checkTokenExpiration = authMiddleware.checkTokenExpiration;
 export const attachUserId = authMiddleware.attachUserId;
+export const userRateLimit = authMiddleware.userRateLimit;

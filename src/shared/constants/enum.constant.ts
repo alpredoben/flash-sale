@@ -1,8 +1,8 @@
-
 export enum En_ItemStatus {
   ACTIVE = 'active',
   INACTIVE = 'inactive',
   SOLD_OUT = 'sold_out',
+  OUT_OF_STOCK = 'out_of_stock',
 }
 
 export enum En_ReservationStatus {
@@ -17,7 +17,7 @@ export enum En_UserStatus {
   INACTIVE = 'inactive',
   SUSPENDED = 'suspended',
   PENDING_VERIFICATION = 'pending_verification',
-  BANNED = 'banned'
+  BANNED = 'banned',
 }
 
 export enum En_RoleType {
@@ -47,4 +47,8 @@ export enum En_PermissionAction {
   REJECT = 'reject',
   EXPORT = 'export',
   IMPORT = 'import',
+}
+
+export enum En_ReservationStatus {
+  BOOKED = 'BOOKED',
 }

@@ -1,6 +1,6 @@
 import { Repository } from 'typeorm';
 import { User } from '@models/user.model';
-import { databaseConfig } from '@config/index';
+import databaseConfig from '@config/database.config';
 import logger from '@utils/logger.util';
 import { TableNames } from '@/shared/constants/tableName.constant';
 import { In_PaginationParams } from '@/interfaces/pagination.interface';

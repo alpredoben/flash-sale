@@ -32,6 +32,31 @@
     },
     "auth": {
       "required-token": "{{name}} is required"
+    },
+    "item": {
+      "not-found": "Item not found",
+      "sku-exists": "An item with this SKU already exists",
+      "invalid-price": "Invalid price value",
+      "invalid-stock": "Invalid stock value",
+      "insufficient-stock": "Insufficient stock",
+      "not-available": "Item is not available for reservation",
+      "sale-not-started": "Sale has not started yet",
+      "sale-ended": "Sale has ended",
+      "has-reservations": "Cannot delete item with active reservations"
+    },
+
+    "reservation": {
+      "not-found": "Reservation not found",
+      "unauthorized": "You do not have access to this reservation",
+      "invalid-quantity": "Invalid quantity",
+      "max-per-user": "You have reached the maximum reservation limit for this item",
+      "invalid-status": "This action cannot be performed on a reservation with the current status",
+      "expired": "Reservation has expired",
+      "already-confirmed": "Reservation has already been confirmed",
+      "already-cancelled": "Reservation has already been cancelled"
+    },
+    "rate-limit": {
+      "many-request": "Too many {{name}} attempts. Please try again later"
     }
   },
   "success": {
@@ -65,6 +90,23 @@
       "create": "Permission created successfully",
       "update": "Permission updated successfully",
       "delete": "Permission deleted successfully"
+    },
+    "item": {
+      "create": "Item created successfully",
+      "update": "Item updated successfully",
+      "delete": "Item deleted successfully",
+      "update-status": "Item status updated successfully",
+      "fetch": "{{name}} retrieved successfully",
+      "statistic": "Item Statistic retrieved successfully"
+    },
+
+    "reservation": {
+      "create": "Reservation created successfully. Please complete checkout within 15 minutes.",
+      "checkout": "Reservation checkout completed successfully",
+      "cancel": "Reservation canceled successfully",
+      "admin-cancel": "Reservation successfully canceled by admin",
+      "fetch": "{{name}} retrieved successfully",
+      "statistic": "Reservation statistic retrieved successfully"
     }
   }
 }

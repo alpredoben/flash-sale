@@ -1,7 +1,9 @@
 import {
+  En_ItemStatus,
   En_PermissionAction,
   En_PermissionCategory,
-} from '@/shared/constants/enum.constant';
+  En_ReservationStatus
+} from '@constants/enum.constant';
 
 export interface In_DTO_Register {
   firstName: string;
@@ -71,4 +73,97 @@ export interface In_DTO_UpdatePermission {
   resource?: string;
   action?: En_PermissionAction;
   isActive?: boolean;
+}
+
+/** ITEM */
+export interface In_DTO_CreateItem {
+  sku: string;
+  name: string;
+  description?: string;
+  price: number;
+  originalPrice?: number;
+  stock: number;
+  imageUrl?: string;
+  saleStartDate?: Date;
+  saleEndDate?: Date;
+  maxPerUser?: number;
+}
+
+export interface In_DTO_UpdateItem {
+  name?: string;
+  description?: string;
+  price?: number;
+  originalPrice?: number;
+  stock?: number;
+  status?: En_ItemStatus;
+  imageUrl?: string;
+  saleStartDate?: Date;
+  saleEndDate?: Date;
+  maxPerUser?: number;
+}
+
+export interface In_ItemListParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: En_ItemStatus;
+  sortBy?: 'name' | 'price' | 'stock' | 'createdAt';
+  sortOrder?: 'ASC' | 'DESC';
+  minPrice?: number;
+  maxPrice?: number;
+  inStock?: boolean;
+}
+
+// RESERVATION
+
+export interface In_DTO_CreateReservation {
+  itemId: string;
+  quantity: number;
+}
+
+export interface In_DTO_CheckoutReservation {
+  reservationId: string;
+}
+
+export interface In_DTO_CancelReservation {
+  reservationId: string;
+  reason?: string;
+}
+
+export interface In_ReservationListParams {
+  page?: number;
+  limit?: number;
+  status?: En_ReservationStatus;
+  userId?: string;
+  itemId?: string;
+  sortBy?: 'createdAt' | 'expiresAt' | 'totalPrice';
+  sortOrder?: 'ASC' | 'DESC';
+  startDate?: Date;
+  endDate?: Date;
+}
+
+export interface In_ReservationResponse {
+  id: string;
+  reservationCode: string;
+  user: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+  item: {
+    id: string;
+    sku: string;
+    name: string;
+    imageUrl?: string;
+  };
+  quantity: number;
+  price: number;
+  totalPrice: number;
+  status: En_ReservationStatus;
+  expiresAt: Date;
+  confirmedAt?: Date;
+  cancelledAt?: Date;
+  cancellationReason?: string;
+  createdAt: Date;
 }
