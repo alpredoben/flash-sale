@@ -87,8 +87,8 @@
       "@listeners/*": [
         "src/features/listeners/*"
       ],
-      "@queues/*": [
-        "src/features/queues/*"
+      "@queue/*": [
+        "src/features/queue/*"
       ],
       "@jobs/*": [
         "src/features/jobs/*"

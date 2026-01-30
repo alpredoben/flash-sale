@@ -42,7 +42,10 @@
       "not-available": "Item is not available for reservation",
       "sale-not-started": "Sale has not started yet",
       "sale-ended": "Sale has ended",
-      "has-reservations": "Cannot delete item with active reservations"
+      "has-reservations": "Cannot delete item with active reservations",
+      "unavailable-reservation": "Item is not available for reservation",
+      "insufficient": "Insufficient stock. Available: {{stock}}, Requested: {{quantity}}",
+      "not-enough-stock": "Not enough total stock to confirm"
     },
 
     "reservation": {
@@ -53,7 +56,8 @@
       "invalid-status": "This action cannot be performed on a reservation with the current status",
       "expired": "Reservation has expired",
       "already-confirmed": "Reservation has already been confirmed",
-      "already-cancelled": "Reservation has already been cancelled"
+      "already-cancelled": "Reservation has already been cancelled",
+      "not-enough-reserved": "Not enough reserved stock to confirm"
     },
     "rate-limit": {
       "many-request": "Too many {{name}} attempts. Please try again later"
@@ -61,7 +65,9 @@
   },
   "success": {
     "default": {
-      "fetch": "{{name}} retrieved successfully"
+      "fetch": "{{name}} retrieved successfully",
+      "trigger": "{{name}} triggered successfully",
+      "reset": "{{name}} reset successfully"
     },
     "auth": {
       "register": "Registration successfully. Please check your email to verify your account",
@@ -107,6 +113,11 @@
       "admin-cancel": "Reservation successfully canceled by admin",
       "fetch": "{{name}} retrieved successfully",
       "statistic": "Reservation statistic retrieved successfully"
+    },
+    "stock": {
+      "consistent": "Stock is consistent",
+      "fix-consistent": "Stock consistency fixed",
+      "inconsistent": "Stock inconsistencies detected"
     }
   }
 }

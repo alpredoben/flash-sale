@@ -31,10 +31,10 @@ class Config {
     }
 
     try {
-      console.log('🚀 Initializing application configurations...');
-      console.log(`Environment: ${environment.nodeEnv}`);
-      console.log(`App Name: ${environment.appName}`);
-      console.log(`App URL: ${environment.appUrl}`);
+      console.log('🏃‍♂️🏃‍♂️🏃‍♂️🏃‍♂️ Setup Configuration 🏃‍♂️🏃‍♂️🏃‍♂️🏃‍♂️');
+      console.log(`⚪ Environment: ${environment.nodeEnv}`);
+      console.log(`⚪ App Name: ${environment.appName}`);
+      console.log(`⚪ App URL: ${environment.appUrl}`);
       console.log('─────────────────────────────────────────');
 
       // Initialize database connection

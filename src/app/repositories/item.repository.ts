@@ -1,12 +1,4 @@
-// src/app/repositories/item.repository.ts
-import {
-  Repository,
-  FindOptionsWhere,
-  LessThanOrEqual,
-  MoreThanOrEqual,
-  Like,
-  In,
-} from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { Item } from '@models/item.model';
 import databaseConfig from '@config/database.config';
 import { En_ItemStatus } from '@constants/enum.constant';

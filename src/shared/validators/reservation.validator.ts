@@ -1,4 +1,4 @@
-import { body, query, param } from 'express-validator';
+import { query } from 'express-validator';
 import { En_ReservationStatus } from '@constants/enum.constant';
 import { reqValidation } from '@validators/validation';
 import lang from '@lang/index';

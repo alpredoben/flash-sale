@@ -1,16 +1,12 @@
+// src/shared/middlewares/requestLogger.middleware.ts
 import { Request, Response, NextFunction } from 'express';
-import morgan from 'morgan';
 import logger from '@utils/logger.util';
-import helpers from '@utils/helper.util';
+import { v4 as uuidv4 } from 'uuid';
 
-declare global {
-  namespace Express {
-    interface Request {
-      files?: any;
-    }
-  }
-}
-
+/**
+ * Request Logger Middleware
+ * Logs all incoming HTTP requests with timing information
+ */
 class LoggerMiddleware {
   private static instance: LoggerMiddleware;
 
@@ -24,57 +20,80 @@ class LoggerMiddleware {
   }
 
   /**
-   * Morgan HTTP logger
+   * Main request logger middleware
    */
-  public morgan = () => {
-    return morgan(
-      ':method :url :status :res[content-length] - :response-time ms',
-      {
-        stream: logger.stream,
-        skip: (req: Request) => {
-          // Skip logging for health check and metrics endpoints
-          return req.path === '/health' || req.path === '/metrics';
-        },
-      }
-    );
-  };
+  public logRequest = (req: Request, res: Response, next: NextFunction) => {
+    // Generate unique request ID
+    const requestId = uuidv4();
+    req.headers['x-request-id'] = requestId;
 
-  /**
-   * Custom request logger
-   */
-  public logRequest = (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): void => {
+    // Record start time
     const startTime = Date.now();
 
-    // Log request
-    logger.http('Incoming request', {
-      method: req.method,
-      url: req.url,
-      path: req.path,
-      ip: helpers.getClientIp(req),
-      userAgent: helpers.getUserAgent(req),
-      requestId: (req as any).id,
-      userId: req.user?.id,
+    // Get request information
+    const { method, originalUrl, ip, headers } = req;
+    const userAgent = headers['user-agent'] || 'Unknown';
+    const userId = (req as any).user?.id || 'Anonymous';
+
+    // Log incoming request
+    logger.info('Incoming request', {
+      requestId,
+      method,
+      url: originalUrl,
+      ip: this.getClientIp(req),
+      userAgent,
+      userId,
+      query: req.query,
+      body: this.sanitizeBody(req.body),
     });
 
-    // Log response
+    // Override res.json to log response
+    const originalJson = res.json.bind(res);
+    res.json = (body: any) => {
+      const duration = Date.now() - startTime;
+      const { statusCode } = res;
+
+      // Log response
+      logger.info('Outgoing response', {
+        requestId,
+        method,
+        url: originalUrl,
+        statusCode,
+        duration: `${duration}ms`,
+        userId,
+      });
+
+      // Log slow requests (> 1 second)
+      if (duration > 1000) {
+        logger.warn('Slow request detected', {
+          requestId,
+          method,
+          url: originalUrl,
+          duration: `${duration}ms`,
+        });
+      }
+
+      return originalJson(body);
+    };
+
+    // Handle response finish event
     res.on('finish', () => {
       const duration = Date.now() - startTime;
+      const { statusCode } = res;
+
       const logData = {
-        method: req.method,
-        url: req.url,
+        requestId,
+        method,
+        url: originalUrl,
+        statusCode,
         path: req.path,
-        statusCode: res.statusCode,
+        ip: this.getClientIp(req),
         duration: `${duration}ms`,
         contentLength: res.get('content-length'),
-        ip: helpers.getClientIp(req),
-        requestId: (req as any).id,
-        userId: req.user?.id,
+        userId,
       };
 
+      // Log error responses
       if (res.statusCode >= 500) {
         logger.error('Request completed with server error', logData);
       } else if (res.statusCode >= 400) {
@@ -88,174 +107,98 @@ class LoggerMiddleware {
   };
 
   /**
-   * Log slow requests (performance monitoring)
+   * Get real client IP address
    */
-  public logSlowRequests = (thresholdMs: number = 1000) => {
-    return (req: Request, res: Response, next: NextFunction): void => {
-      const startTime = Date.now();
-
-      res.on('finish', () => {
-        const duration = Date.now() - startTime;
-
-        if (duration > thresholdMs) {
-          logger.warn('Slow request detected', {
-            method: req.method,
-            url: req.url,
-            path: req.path,
-            duration: `${duration}ms`,
-            threshold: `${thresholdMs}ms`,
-            statusCode: res.statusCode,
-            ip: helpers.getClientIp(req),
-            userId: req.user?.id,
-          });
-        }
-      });
-
-      next();
-    };
-  };
+  private getClientIp(req: Request): string {
+    const forwarded = req.headers['x-forwarded-for'];
+    if (forwarded) {
+      const ips = (forwarded as string).split(',');
+      return ips[0]?.trim() || req.ip || 'Unknown';
+    }
+    return (
+      (req.headers['x-real-ip'] as string) ||
+      req.connection.remoteAddress ||
+      req.ip ||
+      'Unknown'
+    );
+  }
 
   /**
-   * Log authentication attempts
+   * Sanitize request body for logging (remove sensitive data)
    */
-  public logAuthAttempts = (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): void => {
-    const originalSend = res.send;
+  private sanitizeBody(body: any): any {
+    if (!body || typeof body !== 'object') {
+      return body;
+    }
 
-    res.send = function (data: any): Response {
-      if (req.path.includes('/auth/login') || req.path.includes('/login')) {
-        const statusCode = res.statusCode;
-        const email = req.body?.email || req.body?.username;
+    const sensitiveFields = [
+      'password',
+      'confirmPassword',
+      'currentPassword',
+      'newPassword',
+      'token',
+      'refreshToken',
+      'accessToken',
+      'apiKey',
+      'secret',
+      'creditCard',
+      'cvv',
+      'ssn',
+    ];
 
-        if (statusCode === 200 || statusCode === 201) {
-          logger.info('Successful login attempt', {
-            email,
-            ip: helpers.getClientIp(req),
-            userAgent: helpers.getUserAgent(req),
-          });
-        } else {
-          logger.warn('Failed login attempt', {
-            email,
-            statusCode,
-            ip: helpers.getClientIp(req),
-            userAgent: helpers.getUserAgent(req),
-          });
+    const sanitized = { ...body };
+
+    // Recursively sanitize nested objects
+    const sanitizeObject = (obj: any) => {
+      if (!obj || typeof obj !== 'object') {
+        return obj;
+      }
+
+      const result: any = Array.isArray(obj) ? [] : {};
+
+      for (const key in obj) {
+        if (obj.hasOwnProperty(key)) {
+          const lowerKey = key.toLowerCase();
+
+          // Check if field is sensitive
+          const isSensitive = sensitiveFields.some((field) =>
+            lowerKey.includes(field.toLowerCase())
+          );
+
+          if (isSensitive) {
+            result[key] = '***REDACTED***';
+          } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+            result[key] = sanitizeObject(obj[key]);
+          } else {
+            result[key] = obj[key];
+          }
         }
       }
 
-      return originalSend.call(this, data);
+      return result;
     };
 
-    next();
-  };
+    return sanitizeObject(sanitized);
+  }
 
   /**
-   * Log sensitive operations (CRUD on critical resources)
+   * Log API metrics (optional middleware)
    */
-  public logSensitiveOperations = (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): void => {
-    const sensitiveEndpoints = [
-      '/users',
-      '/roles',
-      '/permissions',
-      '/admin',
-      '/settings',
-    ];
+  public logMetrics = (req: Request, res: Response, next: NextFunction) => {
+    const startTime = Date.now();
 
-    const isSensitive = sensitiveEndpoints.some((endpoint) =>
-      req.path.includes(endpoint)
-    );
-
-    if (isSensitive && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {
-      res.on('finish', () => {
-        logger.info('Sensitive operation performed', {
-          operation: req.method,
-          resource: req.path,
-          userId: req.user?.id,
-          userEmail: req.user?.email,
-          statusCode: res.statusCode,
-          ip: helpers.getClientIp(req),
-          timestamp: new Date().toISOString(),
-        });
-      });
-    }
-
-    next();
-  };
-
-  /**
-   * Log errors
-   */
-  public logErrors = (
-    error: Error,
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): void => {
-    logger.error('Error occurred', {
-      error: error.message,
-      stack: error.stack,
-      method: req.method,
-      url: req.url,
-      path: req.path,
-      body: req.body,
-      query: req.query,
-      params: req.params,
-      ip: helpers.getClientIp(req),
-      userId: req.user?.id,
-      requestId: (req as any).id,
-    });
-
-    next(error);
-  };
-
-  /**
-   * Log database queries (for debugging)
-   */
-  public logDatabaseQueries = (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): void => {
-    if (process.env.LOG_DB_QUERIES === 'true') {
-      const startTime = Date.now();
-
-      res.on('finish', () => {
-        const duration = Date.now() - startTime;
-
-        logger.debug('Database operation completed', {
-          method: req.method,
-          path: req.path,
-          duration: `${duration}ms`,
-          userId: req.user?.id,
-        });
-      });
-    }
-
-    next();
-  };
-
-  /**
-   * Log API usage statistics
-   */
-  public logApiUsage = (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): void => {
     res.on('finish', () => {
-      logger.info('API usage', {
-        endpoint: req.path,
-        method: req.method,
-        statusCode: res.statusCode,
-        userId: req.user?.id,
-        timestamp: new Date().toISOString(),
+      const duration = Date.now() - startTime;
+      const { method, originalUrl } = req;
+      const { statusCode } = res;
+
+      // Log metrics
+      logger.debug('API Metrics', {
+        method,
+        url: originalUrl,
+        statusCode,
+        duration: `${duration}ms`,
+        memory: process.memoryUsage().heapUsed / 1024 / 1024, // MB
       });
     });
 
@@ -263,121 +206,51 @@ class LoggerMiddleware {
   };
 
   /**
-   * Log file uploads
+   * Error logger middleware
    */
-  public logFileUploads = (
+  public logError = (
+    err: Error,
     req: Request,
     res: Response,
     next: NextFunction
-  ): void => {
-    if (req.files) {
-      const files = Array.isArray(req.files) ? req.files : [req.files];
+  ) => {
+    const requestId = req.headers['x-request-id'] as string;
+    const { method, originalUrl } = req;
+    const userId = (req as any).user?.id || 'Anonymous';
 
-      logger.info('File upload', {
-        fileCount: files.length,
-        files: files.map((file: any) => ({
-          filename: file.originalname,
-          size: file.size,
-          mimetype: file.mimetype,
-        })),
-        userId: req.user?.id,
-        ip: helpers.getClientIp(req),
-      });
-    }
+    logger.error('Request error', {
+      requestId,
+      method,
+      url: originalUrl,
+      userId,
+      error: {
+        name: err.name,
+        message: err.message,
+        stack: err.stack,
+      },
+    });
 
-    next();
+    next(err);
   };
 
   /**
-   * Log cache hits/misses
+   * Skip logging for specific paths (health checks, etc.)
    */
-  public logCacheActivity = (
-    cacheHit: boolean,
-    key: string,
-    req: Request
-  ): void => {
-    logger.debug(cacheHit ? 'Cache hit' : 'Cache miss', {
-      key,
-      path: req.path,
-      method: req.method,
-      userId: req.user?.id,
-    });
-  };
+  public skipLogging = (paths: string[]) => {
+    return (req: Request, res: Response, next: NextFunction) => {
+      const shouldSkip = paths.some((path) => req.originalUrl.includes(path));
 
-  /**
-   * Structured logging for specific events
-   */
-  public logEvent = (
-    eventType: string,
-    eventData: any,
-    req: Request
-  ): void => {
-    logger.info('Event logged', {
-      eventType,
-      eventData,
-      userId: req.user?.id,
-      ip: helpers.getClientIp(req),
-      timestamp: new Date().toISOString(),
-    });
-  };
+      if (shouldSkip) {
+        return next();
+      }
 
-  /**
-   * Security event logging
-   */
-  public logSecurityEvent = (
-    eventType: 'suspicious_activity' | 'rate_limit_exceeded' | 'invalid_token' | 'unauthorized_access',
-    details: any,
-    req: Request
-  ): void => {
-    logger.warn('Security event', {
-      eventType,
-      details,
-      ip: helpers.getClientIp(req),
-      userAgent: helpers.getUserAgent(req),
-      path: req.path,
-      method: req.method,
-      userId: req.user?.id,
-      timestamp: new Date().toISOString(),
-    });
-  };
-
-  /**
-   * Audit log for compliance
-   */
-  public auditLog = (
-    action: string,
-    resource: string,
-    details: any,
-    req: Request
-  ): void => {
-    logger.info('Audit log', {
-      action,
-      resource,
-      details,
-      userId: req.user?.id,
-      userEmail: req.user?.email,
-      ip: helpers.getClientIp(req),
-      timestamp: new Date().toISOString(),
-    });
+      return this.logRequest(req, res, next);
+    };
   };
 }
 
 // Export singleton instance
-const loggerMiddleware = LoggerMiddleware.getInstance();
+const requestLogger = LoggerMiddleware.getInstance();
 
-export default loggerMiddleware;
-
-// Export individual middleware functions
-export const morganLogger = loggerMiddleware.morgan;
-export const logRequest = loggerMiddleware.logRequest;
-export const logSlowRequests = loggerMiddleware.logSlowRequests;
-export const logAuthAttempts = loggerMiddleware.logAuthAttempts;
-export const logSensitiveOperations = loggerMiddleware.logSensitiveOperations;
-export const logErrors = loggerMiddleware.logErrors;
-export const logDatabaseQueries = loggerMiddleware.logDatabaseQueries;
-export const logApiUsage = loggerMiddleware.logApiUsage;
-export const logFileUploads = loggerMiddleware.logFileUploads;
-export const logCacheActivity = loggerMiddleware.logCacheActivity;
-export const logEvent = loggerMiddleware.logEvent;
-export const logSecurityEvent = loggerMiddleware.logSecurityEvent;
-export const auditLog = loggerMiddleware.auditLog;
+export default requestLogger.logRequest;
+export { LoggerMiddleware, requestLogger };

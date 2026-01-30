@@ -287,6 +287,52 @@ class RabbitMQConfig {
   public isConnected(): boolean {
     return !!this.connection && !!this.channel;
   }
+
+  /** Consume messages with advanced options like prefetch */
+  public async consume(
+    queue: string,
+    handler: (data: any, raw: ConsumeMessage) => Promise<void>,
+    options: { noAck?: boolean; prefetch?: number } = {}
+  ): Promise<void> {
+    const channel = this.getChannel();
+
+    // Set prefetch if existed (Flow Control)
+    if (options.prefetch) {
+      await channel.prefetch(options.prefetch);
+    }
+
+    await channel.consume(
+      queue,
+      async (msg) => {
+        if (!msg) return;
+
+        try {
+          // Parsing message content
+          const payload = JSON.parse(msg.content.toString());
+
+          // Handle function execution
+          await handler(payload, msg);
+
+          // Acknowledge message,  If success and not mode noAck
+          if (!options.noAck) {
+            channel.ack(msg);
+          }
+        } catch (err) {
+          logger.error('Consumer error', {
+            queue,
+            error: err instanceof Error ? err.message : err,
+          });
+
+          // If failed, send  Negative Acknowledge (nack)
+          // requeue: true if message resend again or false if stop message (go to DLQ)
+          if (!options.noAck) {
+            channel.nack(msg, false, false); // false di akhir berarti tidak otomatis masuk antrean lagi (requeue)
+          }
+        }
+      },
+      { noAck: options.noAck ?? false }
+    );
+  }
 }
 
 export default RabbitMQConfig.getInstance();

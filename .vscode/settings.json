@@ -36,11 +36,14 @@
   "cSpell.words": [
     "fanout",
     "ILIKE",
+    "ketersediaan",
+    "mencukupi",
     "Millis",
     "nosniff",
     "setex",
     "smhdwy",
     "superadmin",
-    "timestamptz"
+    "timestamptz",
+    "uuidv"
   ]
 }

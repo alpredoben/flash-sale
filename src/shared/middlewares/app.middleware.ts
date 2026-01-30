@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import hpp from 'hpp';
@@ -6,17 +6,18 @@ import compression from 'compression';
 import environment from '@config/env.config';
 import logger from '@utils/logger.util';
 import Translate from '@lang/index';
+import cookieParser from 'cookie-parser';
 
-class SecurityMiddleware {
-  private static instance: SecurityMiddleware;
+class AppMiddleware {
+  private static instance: AppMiddleware;
 
   private constructor() {}
 
-  public static getInstance(): SecurityMiddleware {
-    if (!SecurityMiddleware.instance) {
-      SecurityMiddleware.instance = new SecurityMiddleware();
+  public static getInstance(): AppMiddleware {
+    if (!AppMiddleware.instance) {
+      AppMiddleware.instance = new AppMiddleware();
     }
-    return SecurityMiddleware.instance;
+    return AppMiddleware.instance;
   }
 
   /**
@@ -81,6 +82,11 @@ class SecurityMiddleware {
       ],
       maxAge: 86400, // 24 hours
     });
+  };
+
+  /** Cookie */
+  public cookie = () => {
+    return cookieParser();
   };
 
   /**
@@ -420,6 +426,11 @@ class SecurityMiddleware {
       this.cors(),
       this.hpp(),
       this.compression(),
+
+      express.json({ limit: '10mb' }),
+      express.urlencoded({ extended: true, limit: '10mb' }),
+      this.cookie(),
+
       this.customHeaders,
       this.preventInfoDisclosure,
       this.addRequestId,
@@ -429,26 +440,6 @@ class SecurityMiddleware {
 }
 
 // Export singleton instance
-const securityMiddleware = SecurityMiddleware.getInstance();
+const appMiddleware = AppMiddleware.getInstance();
 
-export default securityMiddleware;
-
-// Export individual middleware functions
-export const helmetSecurity = securityMiddleware.helmet;
-export const corsPolicy = securityMiddleware.cors;
-export const hppProtection = securityMiddleware.hpp;
-export const compressionMiddleware = securityMiddleware.compression;
-export const customHeaders = securityMiddleware.customHeaders;
-export const setLanguage = securityMiddleware.setLanguage;
-export const enforceHttps = securityMiddleware.enforceHttps;
-export const preventClickjacking = securityMiddleware.preventClickjacking;
-export const validateContentType = securityMiddleware.validateContentType;
-export const limitRequestSize = securityMiddleware.limitRequestSize;
-export const validateHostHeader = securityMiddleware.validateHostHeader;
-export const addApiVersion = securityMiddleware.addApiVersion;
-export const addRequestId = securityMiddleware.addRequestId;
-export const preventMimeSniffing = securityMiddleware.preventMimeSniffing;
-export const setCacheControl = securityMiddleware.setCacheControl;
-export const preventInfoDisclosure = securityMiddleware.preventInfoDisclosure;
-export const ipFilter = securityMiddleware.ipFilter;
-export const setupSecurity = securityMiddleware.setupSecurity;
+export default appMiddleware;

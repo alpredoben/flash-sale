@@ -1,11 +1,11 @@
-// src/shared/middlewares/rateLimiter.middleware.ts
-import rateLimit from 'express-rate-limit';
+import rateLimit, { RateLimitRequestHandler } from 'express-rate-limit';
 import RedisStore from 'rate-limit-redis';
 import redisConfig from '@config/redis.config';
-import { Request, Response } from 'express';
 import apiResponse from '@utils/response.util';
 import logger from '@utils/logger.util';
 import lang from '@lang/index';
+import { Request, Response } from 'express';
+import { In_RateLimiterConfig } from '@interfaces/config.interface';
 
 class RateLimiterMiddleware {
   private static instance: RateLimiterMiddleware;

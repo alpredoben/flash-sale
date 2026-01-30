@@ -1,17 +1,10 @@
-import express from 'express';
-import { setupSecurity } from '@middlewares/security.middleware';
-import { globalLimiter } from '@middlewares/rateLimiter.middleware';
-import { logRequest } from '@middlewares/logger.middleware';
-import routers from '@routes/index';
-import { handleError, handleNotFound } from '@middlewares/error.middleware';
+import server from './app';
+import { environment } from './configs';
+import logger from '@utils/logger.util';
 
-const app = express();
-
-app.use(setupSecurity());
-app.use(globalLimiter());
-app.use(logRequest);
-
-app.use('/api/v1', routers);
-
-app.use(handleError);
-app.use(handleNotFound);
+if (environment.nodeEnv !== 'test') {
+  server.startApp().catch((error) => {
+    logger.error('Fatal error during server startup', error);
+    process.exit(1);
+  });
+}
