@@ -1,52 +1,17 @@
 {
-  // Visit https://aka.ms/tsconfig to read more about this file
   "compilerOptions": {
-    // File Layout
-    "rootDir": "./src",
-    "outDir": "./dist",
-    "esModuleInterop": true,
-    // Environment Settings
-    // See also https://aka.ms/tsconfig/module
-    "module": "commonjs",
-    "target": "ES2022",
-    "types": [],
-    // For nodejs:
+    /* Language and Environment */
+    "target": "ES2021",
     "lib": [
-      "ES2022"
+      "ES2021"
     ],
-    "removeComments": true,
-    "baseUrl": ".",
-    // "types": ["node"],
-    // and npm install -D @types/node
-    // Other Outputs
-    "sourceMap": true,
-    "declaration": true,
-    "declarationMap": true,
-    // Stricter Typechecking Options
-    "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": false,
-    // Style Options
-    "noImplicitReturns": true,
-    // "noImplicitOverride": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-    // "noPropertyAccessFromIndexSignature": true,
-    // Recommended Options
-    "strict": true,
-    "jsx": "react-jsx",
-    "verbatimModuleSyntax": false,
-    "isolatedModules": true,
-    "noUncheckedSideEffectImports": true,
-    "moduleDetection": "force",
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "moduleResolution": "node",
-    "allowSyntheticDefaultImports": true,
-    "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "strictPropertyInitialization": false,
+    "emitDecoratorMetadata": true,
+    /* Modules */
+    "module": "commonjs",
+    "rootDir": "./src",
+    "moduleResolution": "node",
+    "baseUrl": "./",
     "paths": {
       "@/*": [
         "src/*"
@@ -69,17 +34,26 @@
       "@middlewares/*": [
         "src/shared/middlewares/*"
       ],
+      "@validators/*": [
+        "src/shared/validators/*"
+      ],
       "@utils/*": [
         "src/shared/utils/*"
+      ],
+      "@constants/*": [
+        "src/shared/constants/*"
+      ],
+      "@interfaces/*": [
+        "src/interfaces/*"
       ],
       "@routes/*": [
         "src/routes/*"
       ],
-      "@validators/*": [
-        "src/shared/validators/*"
+      "@jobs/*": [
+        "src/features/jobs/*"
       ],
-      "@types/*": [
-        "src/types/*"
+      "@queue/*": [
+        "src/features/queue/*"
       ],
       "@events/*": [
         "src/features/events/*"
@@ -87,25 +61,48 @@
       "@listeners/*": [
         "src/features/listeners/*"
       ],
-      "@queue/*": [
-        "src/features/queue/*"
-      ],
-      "@jobs/*": [
-        "src/features/jobs/*"
-      ],
-      "@interfaces/*": [
-        "src/interfaces/*"
-      ],
       "@docs/*": [
         "src/docs/*"
-      ],
-      "@constants/*": [
-        "src/shared/constants/*"
       ],
       "@lang/*": [
         "src/lang/*"
       ]
-    }
+    },
+    "resolveJsonModule": true,
+    "typeRoots": [
+      "./node_modules/@types",
+      "./src/types"
+    ],
+    "types": [
+      "node",
+      "jest"
+    ],
+    /* Emit */
+    "outDir": "./dist",
+    "removeComments": true,
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+    /* Interop Constraints */
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    /* Type Checking */
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": false,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    /* Completeness */
+    "skipLibCheck": true
   },
   "include": [
     "src/**/*"
@@ -113,6 +110,8 @@
   "exclude": [
     "node_modules",
     "dist",
-    "tests"
+    "tests",
+    "**/*.spec.ts",
+    "**/*.test.ts"
   ]
 }
