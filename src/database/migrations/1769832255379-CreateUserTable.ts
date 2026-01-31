@@ -1,3 +1,4 @@
+import { TableNames } from '../../shared/constants/tableName.constant';
 import { MigrationInterface, QueryRunner, Table, TableIndex } from 'typeorm';
 
 export class CreateUserTable1769832255379 implements MigrationInterface {
@@ -17,7 +18,7 @@ export class CreateUserTable1769832255379 implements MigrationInterface {
     // Create users table
     await queryRunner.createTable(
       new Table({
-        name: 'users',
+        name: TableNames.User,
         columns: [
           {
             name: 'id',

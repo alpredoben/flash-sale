@@ -1,6 +1,6 @@
-import Redis, { RedisOptions } from "ioredis";
-import env from "@config/env.config";
-import logger from "@utils/logger.util";
+import Redis, { RedisOptions } from 'ioredis';
+import env from '@config/env.config';
+import logger from '@utils/logger.util';
 
 class RedisConfig {
   private static instance: RedisConfig;
@@ -17,9 +17,6 @@ class RedisConfig {
     return RedisConfig.instance;
   }
 
-  /**
-   * Get Redis client configuration
-   */
   private getRedisOptions(): RedisOptions {
     const options: RedisOptions = {
       host: env.redisHost,
@@ -36,11 +33,10 @@ class RedisConfig {
       connectTimeout: 10000,
       lazyConnect: false,
       keepAlive: 30000,
-      family: 4, // IPv4
+      family: 4,
       reconnectOnError: (err) => {
-        const targetError = "READONLY";
-        if (err.message.includes(targetError)) {
-          logger.error("Redis reconnect on READONLY error");
+        if (err.message.includes('READONLY')) {
+          logger.error('Redis reconnect on READONLY error');
           return true;
         }
         return false;
@@ -54,403 +50,133 @@ class RedisConfig {
     return options;
   }
 
-  /**
-   * Initialize Redis connection
-   */
   public async connect(): Promise<Redis> {
     try {
-      if (this.client && this.client.status === "ready") {
-        logger.info("Redis client already connected");
-        return this.client;
+      const client = this.getClient();
+
+      if (client.status === 'ready') {
+        return client;
       }
 
-      const options = this.getRedisOptions();
-      this.client = new Redis(options);
-
-      // Event handlers
-      this.setupEventHandlers(this.client, "Main Client");
-
-      // Wait for ready state
       await new Promise<void>((resolve, reject) => {
-        this.client!.once("ready", () => {
-          logger.info("✅ Redis connection established successfully", {
-            host: env.redisHost,
-            port: env.redisPort,
-            db: env.redisDb,
-          });
-          resolve();
-        });
-
-        this.client!.once("error", (error) => {
-          logger.error("❌ Failed to connect to Redis", {
-            error: error.message,
-            host: env.redisHost,
-          });
-          reject(error);
-        });
+        client.once('ready', resolve);
+        client.once('error', reject);
       });
 
-      // Test the connection
       await this.testConnection();
-
-      return this.client;
+      return client;
     } catch (error) {
-      logger.error("❌ Redis connection error", {
-        error: error instanceof Error ? error.message : "Unknown error",
+      logger.error('❌ Redis connection error', {
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw error;
     }
   }
 
-  /**
-   * Get Redis client for Pub/Sub subscriber
-   */
-  public async getSubscriber(): Promise<Redis> {
-    try {
-      if (this.subscriber && this.subscriber.status === "ready") {
-        return this.subscriber;
-      }
-
-      const options = this.getRedisOptions();
-      this.subscriber = new Redis(options);
-
-      this.setupEventHandlers(this.subscriber, "Subscriber");
-
-      await new Promise<void>((resolve) => {
-        this.subscriber!.once("ready", () => {
-          logger.info("✅ Redis subscriber connected");
-          resolve();
-        });
-      });
-
-      return this.subscriber;
-    } catch (error) {
-      logger.error("❌ Failed to create Redis subscriber", {
-        error: error instanceof Error ? error.message : "Unknown error",
-      });
-      throw error;
-    }
-  }
-
-  /**
-   * Get Redis client for Pub/Sub publisher
-   */
-  public async getPublisher(): Promise<Redis> {
-    try {
-      if (this.publisher && this.publisher.status === "ready") {
-        return this.publisher;
-      }
-
-      const options = this.getRedisOptions();
-      this.publisher = new Redis(options);
-
-      this.setupEventHandlers(this.publisher, "Publisher");
-
-      await new Promise<void>((resolve) => {
-        this.publisher!.once("ready", () => {
-          logger.info("✅ Redis publisher connected");
-          resolve();
-        });
-      });
-
-      return this.publisher;
-    } catch (error) {
-      logger.error("❌ Failed to create Redis publisher", {
-        error: error instanceof Error ? error.message : "Unknown error",
-      });
-      throw error;
-    }
-  }
-
-  /**
-   * Setup event handlers for Redis client
-   */
-  private setupEventHandlers(client: Redis, clientName: string): void {
-    client.on("connect", () => {
-      logger.info(`Redis ${clientName} connecting...`);
-    });
-
-    client.on("ready", () => {
-      logger.info(`Redis ${clientName} ready`);
-    });
-
-    client.on("error", (error) => {
-      logger.error(`Redis ${clientName} error`, {
-        error: error.message,
-      });
-    });
-
-    client.on("close", () => {
-      logger.warn(`Redis ${clientName} connection closed`);
-    });
-
-    client.on("reconnecting", (delay: number) => {
-      logger.warn(`Redis ${clientName} reconnecting in ${delay}ms`);
-    });
-
-    client.on("end", () => {
-      logger.warn(`Redis ${clientName} connection ended`);
-    });
-  }
-
-  /**
-   * Test Redis connection
-   */
-  private async testConnection(): Promise<void> {
-    if (!this.client) {
-      throw new Error("Redis client not initialized");
-    }
-
-    try {
-      const pong = await this.client.ping();
-      if (pong === "PONG") {
-        logger.info("Redis connection test successful");
-      }
-    } catch (error) {
-      logger.error("Redis connection test failed", {
-        error: error instanceof Error ? error.message : "Unknown error",
-      });
-      throw error;
-    }
-  }
-
-  /**
-   * Get active Redis client
-   */
   public getClient(): Redis {
-    if (!this.client || this.client.status !== "ready") {
-      throw new Error("Redis not connected. Call connect() first.");
+    if (!this.client) {
+      this.client = new Redis(this.getRedisOptions());
+      this.setupEventHandlers(this.client, 'Main Client');
     }
     return this.client;
   }
 
-  /**
-   * Disconnect from Redis
-   */
-  public async disconnect(): Promise<void> {
-    try {
-      const disconnectPromises: Promise<void>[] = [];
-
-      if (this.client) {
-        disconnectPromises.push(
-          this.client.quit().then(() => {
-            logger.info("Redis main client disconnected");
-          }),
-        );
-        this.client = null;
-      }
-
-      if (this.subscriber) {
-        disconnectPromises.push(
-          this.subscriber.quit().then(() => {
-            logger.info("Redis subscriber disconnected");
-          }),
-        );
-        this.subscriber = null;
-      }
-
-      if (this.publisher) {
-        disconnectPromises.push(
-          this.publisher.quit().then(() => {
-            logger.info("Redis publisher disconnected");
-          }),
-        );
-        this.publisher = null;
-      }
-
-      await Promise.all(disconnectPromises);
-      logger.info("✅ All Redis connections closed successfully");
-    } catch (error) {
-      logger.error("❌ Error closing Redis connections", {
-        error: error instanceof Error ? error.message : "Unknown error",
-      });
-      throw error;
-    }
-  }
+  // --- Fungsi yang dibutuhkan oleh index.ts ---
 
   /**
-   * Check Redis connection status
+   * Mengecek apakah client sudah terinisialisasi dan siap
    */
   public isConnected(): boolean {
-    return this.client !== null && this.client.status === "ready";
+    return this.client !== null && this.client.status === 'ready';
   }
 
   /**
-   * Get Redis health status
+   * Memberikan detail status kesehatan untuk Config.getHealthStatus()
    */
   public async getHealthStatus(): Promise<{
-    status: "healthy" | "unhealthy";
+    status: 'healthy' | 'unhealthy';
     details: any;
   }> {
     try {
-      if (!this.isConnected()) {
+      // Jika instance client saja belum ada
+      if (!this.client) {
         return {
-          status: "unhealthy",
-          details: { message: "Redis not connected" },
+          status: 'unhealthy',
+          details: { message: 'Redis instance not created' },
         };
       }
 
-      // Test ping
+      // Jika sedang menyambung tapi belum ready
+      if (this.client.status !== 'ready') {
+        return {
+          status: 'unhealthy',
+          details: {
+            status: this.client.status,
+            message: 'Redis is not ready',
+          },
+        };
+      }
+
       const start = Date.now();
-      await this.client!.ping();
+      await this.client.ping();
       const latency = Date.now() - start;
 
-      // Get info
-      const info = await this.client!.info();
-      const lines = info.split("\r\n");
+      const info = await this.client.info();
       const serverInfo: any = {};
-
-      lines.forEach((line) => {
-        if (line && !line.startsWith("#")) {
-          const [key, value] = line.split(":");
-          if (key && value) {
-            serverInfo[key.trim()] = value.trim();
-          }
+      info.split('\r\n').forEach((line) => {
+        if (line && !line.startsWith('#')) {
+          const [key, value] = line.split(':');
+          if (key && value) serverInfo[key.trim()] = value.trim();
         }
       });
 
       return {
-        status: "healthy",
+        status: 'healthy',
         details: {
-          connected: true,
           host: env.redisHost,
           port: env.redisPort,
-          db: env.redisDb,
           latency: `${latency}ms`,
           version: serverInfo.redis_version,
-          uptime: serverInfo.uptime_in_seconds,
           connectedClients: serverInfo.connected_clients,
-          usedMemory: serverInfo.used_memory_human,
         },
       };
     } catch (error) {
       return {
-        status: "unhealthy",
+        status: 'unhealthy',
         details: {
-          connected: false,
-          error: error instanceof Error ? error.message : "Unknown error",
+          error: error instanceof Error ? error.message : 'Unknown error',
         },
       };
     }
   }
 
-  /**
-   * Clear all data from Redis (use with caution!)
-   */
-  public async clearCache(): Promise<void> {
-    if (env.isProduction()) {
-      throw new Error("Cannot clear cache in production env");
-    }
+  // --- Fungsi lainnya ---
 
-    try {
-      if (!this.client || this.client.status !== "ready") {
-        await this.connect();
-      }
+  public async disconnect(): Promise<void> {
+    const promises: Promise<any>[] = [];
+    if (this.client) promises.push(this.client.quit());
+    if (this.subscriber) promises.push(this.subscriber.quit());
+    if (this.publisher) promises.push(this.publisher.quit());
 
-      logger.warn("⚠️  Clearing Redis cache...");
-      await this.client!.flushdb();
-      logger.info("✅ Redis cache cleared successfully");
-    } catch (error) {
-      logger.error("❌ Failed to clear Redis cache", {
-        error: error instanceof Error ? error.message : "Unknown error",
-      });
-      throw error;
-    }
+    await Promise.all(promises);
+    this.client = null;
+    this.subscriber = null;
+    this.publisher = null;
+    logger.info('✅ Redis connections closed');
   }
 
-  /**
-   * Get cache statistics
-   */
-  public async getCacheStats(): Promise<any> {
-    try {
-      if (!this.isConnected()) {
-        throw new Error("Redis not connected");
-      }
-
-      const info = await this.client!.info("stats");
-      const keyspace = await this.client!.info("keyspace");
-      const dbSize = await this.client!.dbsize();
-
-      return {
-        info,
-        keyspace,
-        totalKeys: dbSize,
-      };
-    } catch (error) {
-      logger.error("Failed to get cache statistics", {
-        error: error instanceof Error ? error.message : "Unknown error",
-      });
-      throw error;
-    }
+  private setupEventHandlers(client: Redis, name: string): void {
+    client.on('connect', () => logger.info(`Redis ${name} connecting...`));
+    client.on('ready', () => logger.info(`Redis ${name} ready`));
+    client.on('error', (err) =>
+      logger.error(`Redis ${name} error: ${err.message}`)
+    );
   }
 
-  /**
-   * Set value with expiration
-   */
-  public async set(
-    key: string,
-    value: string,
-    expirationInSeconds?: number,
-  ): Promise<void> {
-    const client = this.getClient();
-    if (expirationInSeconds) {
-      await client.setex(key, expirationInSeconds, value);
-    } else {
-      await client.set(key, value);
-    }
-  }
-
-  /**
-   * Get value by key
-   */
-  public async get(key: string): Promise<string | null> {
-    const client = this.getClient();
-    return await client.get(key);
-  }
-
-  /**
-   * Delete key
-   */
-  public async del(key: string): Promise<void> {
-    const client = this.getClient();
-    await client.del(key);
-  }
-
-  /**
-   * Check if key exists
-   */
-  public async exists(key: string): Promise<boolean> {
-    const client = this.getClient();
-    const result = await client.exists(key);
-    return result === 1;
-  }
-
-  /**
-   * Set expiration on key
-   */
-  public async expire(key: string, seconds: number): Promise<void> {
-    const client = this.getClient();
-    await client.expire(key, seconds);
-  }
-
-  /**
-   * Get keys matching pattern
-   */
-  public async keys(pattern: string): Promise<string[]> {
-    const client = this.getClient();
-    return await client.keys(pattern);
-  }
-
-  /**
-   * Delete keys matching pattern
-   */
-  public async deletePattern(pattern: string): Promise<number> {
-    const client = this.getClient();
-    const keys = await client.keys(pattern);
-    if (keys.length === 0) return 0;
-    return await client.del(...keys);
+  private async testConnection(): Promise<void> {
+    const pong = await this.client?.ping();
+    if (pong !== 'PONG') throw new Error('Redis Ping Failed');
   }
 }
 
-// Export singleton instance
 export default RedisConfig.getInstance();

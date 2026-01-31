@@ -1,5 +1,5 @@
-import { En_UserStatus } from '@/shared/constants/enum.constant';
-import { TableNames } from '@/shared/constants/tableName.constant';
+import { En_UserStatus } from '../../shared/constants/enum.constant';
+import { TableNames } from '../../shared/constants/tableName.constant';
 import {
   Column,
   Entity,
@@ -10,7 +10,8 @@ import {
 } from 'typeorm';
 import { Role } from './role.model';
 import { Reservation } from './reservation.model';
-import { AppBaseEntity } from '@models/AppBaseEntity';
+import { AppBaseEntity } from './AppBaseEntity';
+import { RefreshToken } from './refreshToken.model';
 
 @Entity(TableNames.User)
 @Index(['email'], { unique: true })
@@ -35,15 +36,6 @@ export class User extends AppBaseEntity {
   })
   status: En_UserStatus;
 
-  // Many-to-Many relationship with Roles
-  @ManyToMany(() => Role, (role: Role) => role.users, { eager: true })
-  @JoinTable({
-    name: 'user_roles',
-    joinColumn: { name: 'user_id', referencedColumnName: 'id' },
-    inverseJoinColumn: { name: 'role_id', referencedColumnName: 'id' },
-  })
-  roles: Role[];
-
   @Column({ type: 'varchar', length: 20, nullable: true })
   phone?: string;
 
@@ -52,6 +44,21 @@ export class User extends AppBaseEntity {
 
   @Column({ name: 'email_verified', type: 'boolean', default: false })
   emailVerified: boolean;
+
+  // Many-to-Many relationship with Roles
+  @ManyToMany(() => Role, (role: Role) => role.users, { eager: true })
+  @JoinTable({
+    name: TableNames.UserRoles,
+    joinColumn: { name: 'user_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'role_id', referencedColumnName: 'id' },
+  })
+  roles: Role[];
+
+  @OneToMany(() => Reservation, (reservation) => reservation.user)
+  reservations: Reservation[];
+
+  @OneToMany(() => RefreshToken, (token) => token.user)
+  refreshTokens: RefreshToken[];
 
   @Column({
     name: 'email_verification_token',
@@ -85,9 +92,6 @@ export class User extends AppBaseEntity {
 
   @Column({ name: 'last_login', type: 'timestamp', nullable: true })
   lastLogin?: Date;
-
-  @OneToMany(() => Reservation, (reservation) => reservation.user)
-  reservations: Reservation[];
 
   // @OneToMany(() => RefreshToken, (token) => token.user)
   // refreshTokens: RefreshToken[];

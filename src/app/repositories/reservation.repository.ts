@@ -1,4 +1,3 @@
-
 import { Repository, LessThan, In } from 'typeorm';
 import { Reservation } from '@models/reservation.model';
 import databaseConfig from '@config/database.config';
@@ -8,18 +7,18 @@ import { In_PaginationResult } from '@/interfaces/pagination.interface';
 
 class ReservationRepository {
   private static instance: ReservationRepository;
-  private repository: Repository<Reservation>;
 
-  private constructor() {
-    const dataSource = databaseConfig.getDataSource();
-    this.repository = dataSource.getRepository(Reservation);
-  }
+  private constructor() {}
 
   public static getInstance(): ReservationRepository {
     if (!ReservationRepository.instance) {
       ReservationRepository.instance = new ReservationRepository();
     }
     return ReservationRepository.instance;
+  }
+
+  public get repository(): Repository<Reservation> {
+    return databaseConfig.getDataSource().getRepository(Reservation);
   }
 
   /** Find reservation by ID */

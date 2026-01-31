@@ -1,3 +1,4 @@
+import { TableNames } from '../../shared/constants/tableName.constant';
 import { MigrationInterface, QueryRunner, Table, TableIndex } from 'typeorm';
 
 export class CreateRoleTable1769832706818 implements MigrationInterface {
@@ -15,7 +16,7 @@ export class CreateRoleTable1769832706818 implements MigrationInterface {
     // Create roles table
     await queryRunner.createTable(
       new Table({
-        name: 'roles',
+        name: TableNames.Role,
         columns: [
           {
             name: 'id',

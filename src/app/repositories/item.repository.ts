@@ -7,18 +7,18 @@ import { In_PaginationResult } from '@interfaces/pagination.interface';
 
 class ItemRepository {
   private static instance: ItemRepository;
-  private repository: Repository<Item>;
 
-  private constructor() {
-    const dataSource = databaseConfig.getDataSource();
-    this.repository = dataSource.getRepository(Item);
-  }
+  private constructor() {}
 
   public static getInstance(): ItemRepository {
     if (!ItemRepository.instance) {
       ItemRepository.instance = new ItemRepository();
     }
     return ItemRepository.instance;
+  }
+
+  public get repository(): Repository<Item> {
+    return databaseConfig.getDataSource().getRepository(Item);
   }
 
   /** Find item by ID */

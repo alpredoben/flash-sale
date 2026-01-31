@@ -1,7 +1,8 @@
+import { TableNames } from '../../shared/constants/tableName.constant';
 import { MigrationInterface, QueryRunner, Table, TableIndex } from 'typeorm';
 
 export class CreatePermissionTable1769832785783 implements MigrationInterface {
-  name = 'CreatePermissionsTable1706659400000';
+  name = 'CreatePermissionTable1769832785783';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Create enum type for permission category
@@ -37,7 +38,7 @@ export class CreatePermissionTable1769832785783 implements MigrationInterface {
     // Create permissions table
     await queryRunner.createTable(
       new Table({
-        name: 'permissions',
+        name: TableNames.Permission,
         columns: [
           {
             name: 'id',

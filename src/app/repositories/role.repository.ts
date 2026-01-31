@@ -1,25 +1,25 @@
 import { Repository } from 'typeorm';
-import database from '@config/database.config';
+import databaseConfig from '@config/database.config';
 import { Role } from '@models/role.model';
 import logger from '@utils/logger.util';
 import { TableNames } from '@/shared/constants/tableName.constant';
 
 class RoleRepository {
   private static instance: RoleRepository;
-  private repository: Repository<Role>;
 
   private classLabel: string = 'ROLE REPOSITORY';
 
-  private constructor() {
-    const dataSource = database.getDataSource();
-    this.repository = dataSource.getRepository(Role);
-  }
+  private constructor() {}
 
   public static getInstance(): RoleRepository {
     if (!RoleRepository.instance) {
       RoleRepository.instance = new RoleRepository();
     }
     return RoleRepository.instance;
+  }
+
+  public get repository(): Repository<Role> {
+    return databaseConfig.getDataSource().getRepository(Role);
   }
 
   private writeErrorLog(message: string, property: Record<string, any>): void {

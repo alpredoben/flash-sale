@@ -1,3 +1,4 @@
+import { TableNames } from '../../shared/constants/tableName.constant';
 import {
   MigrationInterface,
   QueryRunner,
@@ -7,7 +8,7 @@ import {
 } from 'typeorm';
 
 export class CreateReservationTable1769832901111 implements MigrationInterface {
-  name = 'CreateReservationsTable1706659600000';
+  name = 'CreateReservationTable1769832901111';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Create enum type for reservation status
@@ -23,7 +24,7 @@ export class CreateReservationTable1769832901111 implements MigrationInterface {
     // Create reservations table
     await queryRunner.createTable(
       new Table({
-        name: 'reservations',
+        name: TableNames.Reservation,
         columns: [
           {
             name: 'id',

@@ -1,120 +1,120 @@
 services:
   # Application
-  fs_app_dev:
-    build:
-      context: .
-      dockerfile: ./docker/Dockerfile.dev
-    container_name: fs_app_dev
-    restart: unless-stopped
-    environment:
-      # App
-      APP_NAME: ${APP_NAME:-Flash Sale API}
-      APP_URL: ${APP_URL:-http://localhost:3000}
-      API_VERSION: ${API_VERSION:-v1}
-      APP_LANGUAGE: ${APP_LANGUAGE:-en}
+  # fs_app_dev:
+  #   build:
+  #     context: .
+  #     dockerfile: ./docker/Dockerfile.dev
+  #   container_name: fs_app_dev
+  #   restart: unless-stopped
+  #   environment:
+  #     # App
+  #     APP_NAME: ${APP_NAME:-Flash Sale API}
+  #     APP_URL: ${APP_URL:-http://localhost:3000}
+  #     API_VERSION: ${API_VERSION:-v1}
+  #     APP_LANGUAGE: ${APP_LANGUAGE:-en}
 
-      # Setting
-      NODE_ENV: development
-      PORT: ${PORT:-3000}
+  #     # Setting
+  #     NODE_ENV: development
+  #     PORT: ${PORT:-3000}
 
-      # Database
-      DB_HOST: fs_pg_dev
-      DB_PORT: 5432
-      DB_USER: ${DB_USER:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD:-postgres123}
-      DB_NAME: ${DB_NAME:-flashsale_db}
-      DB_SYNCHRONIZE: ${DB_SYNCHRONIZE:-false}
-      DB_LOGGING: ${DB_LOGGING:-false}
-      DB_POOL_MIN: ${DB_POOL_MIN:-2}
-      DB_POOL_MAX: ${DB_POOL_MAX:-10}
+  #     # Database
+  #     DB_HOST: fs_pg_dev
+  #     DB_PORT: 5432
+  #     DB_USER: ${DB_USER:-postgres}
+  #     DB_PASSWORD: ${DB_PASSWORD:-postgres123}
+  #     DB_NAME: ${DB_NAME:-flashsale_db}
+  #     DB_SYNCHRONIZE: ${DB_SYNCHRONIZE:-false}
+  #     DB_LOGGING: ${DB_LOGGING:-false}
+  #     DB_POOL_MIN: ${DB_POOL_MIN:-2}
+  #     DB_POOL_MAX: ${DB_POOL_MAX:-10}
 
-      # Redis
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis123}
-      REDIS_DB: ${REDIS_DB:-0}
-      REDIS_KEY_PREFIX: ${REDIS_KEY_PREFIX:-flashsale:}
-      REDIS_TTL: ${REDIS_TTL:-3600}
+  #     # Redis
+  #     REDIS_HOST: redis
+  #     REDIS_PORT: 6379
+  #     REDIS_PASSWORD: ${REDIS_PASSWORD:-redis123}
+  #     REDIS_DB: ${REDIS_DB:-0}
+  #     REDIS_KEY_PREFIX: ${REDIS_KEY_PREFIX:-flashsale:}
+  #     REDIS_TTL: ${REDIS_TTL:-3600}
 
-      # RabbitMQ
-      RABBITMQ_HOST: rabbitmq
-      RABBITMQ_PORT: 5672
-      RABBITMQ_USER: ${RABBITMQ_USER:-admin}
-      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-admin123}
-      RABBITMQ_VHOST: ${RABBITMQ_VHOST:-/}
+  #     # RabbitMQ
+  #     RABBITMQ_HOST: rabbitmq
+  #     RABBITMQ_PORT: 5672
+  #     RABBITMQ_USER: ${RABBITMQ_USER:-admin}
+  #     RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-admin123}
+  #     RABBITMQ_VHOST: ${RABBITMQ_VHOST:-/}
 
-      # JWT
-      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-your-super-secret-refresh-key-change-in-production}
-      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-15m}
-      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+  #     # JWT
+  #     JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
+  #     JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-your-super-secret-refresh-key-change-in-production}
+  #     JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-15m}
+  #     JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
 
-      # Email
-      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
-      SMTP_PORT: ${SMTP_PORT:-587}
-      SMTP_USER: ${SMTP_USER:-}
-      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
-      SMTP_FROM: ${SMTP_FROM:-noreply@flashsale.com}
-      SMTP_FROM_NAME: ${SMTP_FROM_NAME:-Flash Sale Team}
-      SMTP_SECURE: ${SMTP_SECURE:-false}
+  #     # Email
+  #     SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+  #     SMTP_PORT: ${SMTP_PORT:-587}
+  #     SMTP_USER: ${SMTP_USER:-}
+  #     SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+  #     SMTP_FROM: ${SMTP_FROM:-noreply@flashsale.com}
+  #     SMTP_FROM_NAME: ${SMTP_FROM_NAME:-Flash Sale Team}
+  #     SMTP_SECURE: ${SMTP_SECURE:-false}
 
-      # Reservation
-      RESERVATION_EXPIRY_MINUTES: ${RESERVATION_EXPIRY_MINUTES:-15}
-      MAX_RESERVATION_PER_USER: ${MAX_RESERVATION_PER_USER:-5}
+  #     # Reservation
+  #     RESERVATION_EXPIRY_MINUTES: ${RESERVATION_EXPIRY_MINUTES:-15}
+  #     MAX_RESERVATION_PER_USER: ${MAX_RESERVATION_PER_USER:-5}
 
-      # Rate Limiting
-      RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-900000}
-      RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-100}
-      RATE_LIMIT_RESERVATION_MAX: ${RATE_LIMIT_RESERVATION_MAX:-10}
+  #     # Rate Limiting
+  #     RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-900000}
+  #     RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-100}
+  #     RATE_LIMIT_RESERVATION_MAX: ${RATE_LIMIT_RESERVATION_MAX:-10}
 
-      # CORS
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000,http://localhost:3001}
-      CORS_CREDENTIALS: ${CORS_CREDENTIALS:-true}
+  #     # CORS
+  #     CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000,http://localhost:3001}
+  #     CORS_CREDENTIALS: ${CORS_CREDENTIALS:-true}
 
-      # Security
-      BCRYPT_ROUNDS: ${BCRYPT_ROUNDS:-10}
+  #     # Security
+  #     BCRYPT_ROUNDS: ${BCRYPT_ROUNDS:-10}
 
-      # Logging
-      LOG_LEVEL: ${LOG_LEVEL:-info}
-      LOG_FORMAT: ${LOG_FORMAT:-json}
+  #     # Logging
+  #     LOG_LEVEL: ${LOG_LEVEL:-info}
+  #     LOG_FORMAT: ${LOG_FORMAT:-json}
 
-      # Scheduler
-      SCHEDULER_ENABLED: ${SCHEDULER_ENABLED:-true}
-      SCHEDULER_INTERVAL: ${SCHEDULER_INTERVAL:-60000}
+  #     # Scheduler
+  #     SCHEDULER_ENABLED: ${SCHEDULER_ENABLED:-true}
+  #     SCHEDULER_INTERVAL: ${SCHEDULER_INTERVAL:-60000}
 
-      # Timezone
-      TZ: ${TZ:-Asia/Jakarta}
-    ports:
-      - '${PORT:-3000}:3000'
-    volumes:
-      - .:/app/src
-      - ./logs:/app/logs
-      - ./backups:/app/backups
-      - ./uploads:/app/uploads
-      - /app/node_modules
-    depends_on:
-      fs_pg_dev:
-        condition: service_healthy
-      fs_redis_dev:
-        condition: service_healthy
-      fs_rabbitmq_dev:
-        condition: service_healthy
-    networks:
-      - fs-network-dev
-    healthcheck:
-      test:
-        [
-          'CMD',
-          'wget',
-          '--quiet',
-          '--tries=1',
-          '--spider',
-          'http://localhost:3000/health',
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+  #     # Timezone
+  #     TZ: ${TZ:-Asia/Jakarta}
+  #   ports:
+  #     - '${PORT:-3000}:3000'
+  #   volumes:
+  #     - ./src:/app/src
+  #     - ./logs:/app/logs
+  #     - ./backups:/app/backups
+  #     - ./uploads:/app/uploads
+  #     - /app/node_modules
+  #   depends_on:
+  #     fs_pg_dev:
+  #       condition: service_healthy
+  #     fs_redis_dev:
+  #       condition: service_healthy
+  #     fs_rabbitmq_dev:
+  #       condition: service_healthy
+  #   networks:
+  #     - fs-network-dev
+  #   healthcheck:
+  #     test:
+  #       [
+  #         'CMD',
+  #         'wget',
+  #         '--quiet',
+  #         '--tries=1',
+  #         '--spider',
+  #         'http://localhost:3000/health',
+  #       ]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #     start_period: 40s
 
   # PostgreSQL
   fs_pg_dev:
@@ -127,7 +127,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD:-QueenSQL}
       PGDATA: /var/lib/postgresql/data/pgdata
     ports:
-      - '${DB_PORT:-5432}:5432'
+      - '${DB_PORT:-5966}:5432'
     volumes:
       - fs_pgData_dev:/var/lib/postgresql/data
       - ./docker/postgres/init:/docker-entrypoint-initdb.d

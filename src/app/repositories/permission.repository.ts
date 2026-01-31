@@ -1,25 +1,25 @@
 import { Repository } from 'typeorm';
-import database from '@config/database.config';
+import databaseConfig from '@config/database.config';
 import { Permission } from '@models/permission.model';
 import logger from '@utils/logger.util';
 import { En_PermissionCategory } from '@constants/enum.constant';
 
 class PermissionRepository {
   private static instance: PermissionRepository;
-  private repository: Repository<Permission>;
 
   private classLabel: string = 'PERMISSION REPOSITORY';
 
-  private constructor() {
-    const dataSource = database.getDataSource();
-    this.repository = dataSource.getRepository(Permission);
-  }
+  private constructor() {}
 
   public static getInstance(): PermissionRepository {
     if (!PermissionRepository.instance) {
       PermissionRepository.instance = new PermissionRepository();
     }
     return PermissionRepository.instance;
+  }
+
+  public get repository(): Repository<Permission> {
+    return databaseConfig.getDataSource().getRepository(Permission);
   }
 
   private writeErrorLog(message: string, property: Record<string, any>): void {

@@ -7,13 +7,9 @@ import { In_PaginationParams } from '@/interfaces/pagination.interface';
 
 class UserRepository {
   private static instance: UserRepository;
-  private repository: Repository<User>;
   private classLabel: string = 'USER REPOSITORY';
 
-  private constructor() {
-    const dataSource = databaseConfig.getDataSource();
-    this.repository = dataSource.getRepository(User);
-  }
+  private constructor() {}
 
   public static getInstance(): UserRepository {
     if (!UserRepository.instance) {
@@ -21,6 +17,10 @@ class UserRepository {
     }
 
     return UserRepository.instance;
+  }
+
+  public get repository(): Repository<User> {
+    return databaseConfig.getDataSource().getRepository(User);
   }
 
   private writeErrorLog(message: string, property: Record<string, any>): void {

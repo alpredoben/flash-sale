@@ -1,3 +1,4 @@
+import { TableNames } from '../../shared/constants/tableName.constant';
 import {
   MigrationInterface,
   QueryRunner,
@@ -7,13 +8,13 @@ import {
 } from 'typeorm';
 
 export class CreateUserRolesTable1769832981210 implements MigrationInterface {
-  name = 'CreateUserRolesTable1706659700000';
+  name = 'CreateUserRolesTable1769832981210';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Create user_roles junction table
     await queryRunner.createTable(
       new Table({
-        name: 'user_roles',
+        name: TableNames.UserRoles,
         columns: [
           {
             name: 'user_id',

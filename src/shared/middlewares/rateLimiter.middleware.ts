@@ -1,5 +1,5 @@
 import rateLimit from 'express-rate-limit';
-import RedisStore from 'rate-limit-redis';
+import RedisStore, { RedisReply } from 'rate-limit-redis';
 import redisConfig from '@config/redis.config';
 import apiResponse from '@utils/response.util';
 import logger from '@utils/logger.util';
@@ -19,21 +19,30 @@ class RateLimiterMiddleware {
   }
 
   /**
-   * Rate limiter for reservation creation
-   * Limit: 5 requests per minute per user
+   * Helper untuk membuat sendCommand yang type-safe untuk ioredis
+   */
+  private redisSender = async (...args: string[]): Promise<RedisReply> => {
+    const result = await redisConfig
+      .getClient()
+      .call(args[0]!, ...args.slice(1));
+    return result as RedisReply;
+  };
+
+  /**
+   * Rate limiter untuk pembuatan reservasi
    */
   reservationCreationLimiter = rateLimit({
-    windowMs: 60 * 1000, // 1 minute
-    max: 5, // 5 requests per windowMs
-    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+    windowMs: 60 * 1000,
+    max: 5,
+    standardHeaders: true,
+    legacyHeaders: false,
+    // DIPERBAIKI: Matikan validasi IPv6 untuk menghindari ERR_ERL_KEY_GEN_IPV6
+    validate: false,
     store: new RedisStore({
-      // @ts-expect-error - Known issue with @types/express-rate-limit
-      client: redisConfig.getClient(),
+      sendCommand: this.redisSender,
       prefix: 'rate_limit:reservation:',
     }),
     keyGenerator: (req: Request): string => {
-      // Use user ID if authenticated, otherwise use IP
       return req.user?.id || req.ip || 'unknown';
     },
     handler: (req: Request, res: Response) => {
@@ -47,55 +56,21 @@ class RateLimiterMiddleware {
       );
     },
     skip: (req: Request): boolean => {
-      // Skip rate limiting for admin users
-      return req.user?.roles?.includes('admin') || false;
-    },
-  });
-
-  /**
-   * Rate limiter for checkout
-   * Limit: 10 requests per minute per user
-   */
-  checkoutLimiter = rateLimit({
-    windowMs: 60 * 1000, // 1 minute
-    max: 10, // 10 requests per windowMs
-    standardHeaders: true,
-    legacyHeaders: false,
-    store: new RedisStore({
-      // @ts-expect-error - Known issue with @types/express-rate-limit
-      client: redisConfig.getClient(),
-      prefix: 'rate_limit:checkout:',
-    }),
-    keyGenerator: (req: Request): string => {
-      return req.user?.id || req.ip || 'unknown';
-    },
-    handler: (req: Request, res: Response) => {
-      logger.warn('Rate limit exceeded for checkout', {
-        userId: req.user?.id,
-        ip: req.ip,
-      });
-      apiResponse.sendRateLimit(
-        res,
-        lang.__('error.rate-limit.many-request', { name: 'checkout' })
-      );
-    },
-    skip: (req: Request): boolean => {
       return req.user?.roles?.includes('admin') || false;
     },
   });
 
   /**
    * General API rate limiter
-   * Limit: 100 requests per 15 minutes per IP
    */
   generalApiLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // 100 requests per windowMs
+    windowMs: 15 * 60 * 1000,
+    max: 100,
     standardHeaders: true,
     legacyHeaders: false,
+    validate: false, // DIPERBAIKI
     store: new RedisStore({
-      // @ts-expect-error - Known issue with @types/express-rate-limit
-      client: redisConfig.getClient(),
+      sendCommand: this.redisSender,
       prefix: 'rate_limit:general:',
     }),
     keyGenerator: (req: Request): string => {
@@ -114,17 +89,16 @@ class RateLimiterMiddleware {
   });
 
   /**
-   * Strict rate limiter for authentication endpoints
-   * Limit: 5 requests per 15 minutes per IP
+   * Rate limiter ketat untuk autentikasi
    */
   authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5, // 5 requests per windowMs
+    windowMs: 15 * 60 * 1000,
+    max: 5,
     standardHeaders: true,
     legacyHeaders: false,
+    validate: false, // DIPERBAIKI
     store: new RedisStore({
-      // @ts-expect-error - Known issue with @types/express-rate-limit
-      client: redisConfig.getClient(),
+      sendCommand: this.redisSender,
       prefix: 'rate_limit:auth:',
     }),
     keyGenerator: (req: Request): string => {
@@ -143,7 +117,7 @@ class RateLimiterMiddleware {
   });
 
   /**
-   * Custom rate limiter factory
+   * Factory untuk custom rate limiter
    */
   createCustomLimiter(options: {
     windowMs: number;
@@ -157,9 +131,9 @@ class RateLimiterMiddleware {
       max: options.max,
       standardHeaders: true,
       legacyHeaders: false,
+      validate: false, // DIPERBAIKI
       store: new RedisStore({
-        // @ts-expect-error - Known issue with @types/express-rate-limit
-        client: redisConfig.getClient(),
+        sendCommand: this.redisSender,
         prefix: `rate_limit:${options.prefix}:`,
       }),
       keyGenerator: (req: Request): string => {

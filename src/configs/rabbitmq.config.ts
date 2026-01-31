@@ -50,9 +50,7 @@ class RabbitMQConfig {
       rabbitmqVhost,
     } = env;
 
-    return `amqp://${encodeURIComponent(rabbitmqUser)}:${encodeURIComponent(
-      rabbitmqPassword
-    )}@${rabbitmqHost}:${rabbitmqPort}${encodeURIComponent(rabbitmqVhost)}`;
+    return `amqp://${rabbitmqUser}:${rabbitmqPassword}@${rabbitmqHost}:${rabbitmqPort}${rabbitmqVhost}`;
   }
 
   /**

@@ -5,4 +5,6 @@ export const TableNames = {
   Permission: 'permissions',
   Item: 'items',
   Reservation: 'reservations',
+  UserRoles: 'user_roles',
+  RolePermissions: 'role_permissions',
 };

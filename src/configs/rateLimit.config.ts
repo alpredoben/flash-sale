@@ -250,7 +250,7 @@ export const globalRateLimiter = createRateLimiter({
  */
 export const getRateLimitStatus = async (key: string): Promise<any> => {
   try {
-    const data = await redisConfig.get(`rate_limit:${key}`);
+    const data = await (await redisConfig.connect()).get(`rate_limit:${key}`);
     return data ? JSON.parse(data) : null;
   } catch (error) {
     logger.error('Failed to get rate limit status', {
@@ -266,7 +266,7 @@ export const getRateLimitStatus = async (key: string): Promise<any> => {
  */
 export const resetRateLimit = async (key: string): Promise<boolean> => {
   try {
-    await redisConfig.del(`rate_limit:${key}`);
+    await (await redisConfig.connect()).del(`rate_limit:${key}`);
     logger.info('Rate limit reset', { key });
     return true;
   } catch (error) {

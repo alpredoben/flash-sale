@@ -1,3 +1,4 @@
+import { TableNames } from '../../shared/constants/tableName.constant';
 import {
   MigrationInterface,
   QueryRunner,
@@ -7,13 +8,13 @@ import {
 } from 'typeorm';
 
 export class CreateRefreshTokenTable1769833101786 implements MigrationInterface {
-  name = 'CreateRefreshTokenTable1706659900000';
+  name = 'CreateRefreshTokenTable1769833101786';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Create refresh_token table
     await queryRunner.createTable(
       new Table({
-        name: 'refresh_token',
+        name: TableNames.RefreshToken,
         columns: [
           {
             name: 'id',

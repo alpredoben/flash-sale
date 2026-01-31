@@ -1,9 +1,9 @@
 import { Column, Entity, Index, JoinTable, ManyToMany } from 'typeorm';
-import { AppBaseEntity } from '@models/AppBaseEntity';
-import { TableNames } from '@constants/tableName.constant';
-import { En_RoleType } from '@constants/enum.constant';
-import { User } from '@models/user.model';
-import { Permission } from '@models/permission.model';
+import { AppBaseEntity } from './AppBaseEntity';
+import { TableNames } from '../../shared/constants/tableName.constant';
+import { En_RoleType } from '../../shared/constants/enum.constant';
+import { User } from './user.model';
+import { Permission } from './permission.model';
 
 @Entity(TableNames.Role)
 @Index(['name'], { unique: true })
