@@ -60,7 +60,6 @@ class QueueProcessor {
     const queueName = 'email_queue';
 
     try {
-      // PERBAIKAN: Pastikan queue wujud sebelum consume
       await rabbitmqConfig.createQueue(queueName, { durable: true });
 
       await rabbitmqConfig.consume(queueName, async (data) => {
@@ -85,7 +84,6 @@ class QueueProcessor {
     const queueName = 'reservation_queue';
 
     try {
-      // PERBAIKAN: Pastikan queue wujud sebelum consume
       await rabbitmqConfig.createQueue(queueName, { durable: true });
 
       await rabbitmqConfig.consume(queueName, async (data) => {
@@ -110,7 +108,6 @@ class QueueProcessor {
     const queueName = 'notification_queue';
 
     try {
-      // PERBAIKAN: Pastikan queue wujud sebelum consume
       await rabbitmqConfig.createQueue(queueName, { durable: true });
 
       await rabbitmqConfig.consume(queueName, async (data) => {
