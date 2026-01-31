@@ -1,4 +1,3 @@
-// src/features/queue/processor.queue.ts
 import rabbitmqConfig from '@config/rabbitmq.config';
 import mailConfig from '@config/smtp.config';
 import logger from '@utils/logger.util';

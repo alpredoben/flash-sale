@@ -1,4 +1,3 @@
-// src/app/controllers/reservation.controller.ts
 import { Request, Response, NextFunction } from 'express';
 import reservationService from '@services/reservation.service';
 import apiResponse from '@utils/response.util';

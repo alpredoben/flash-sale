@@ -176,41 +176,6 @@ class Config {
   }
 
   /**
-   * Get environment configuration
-   */
-  private getEnvironment() {
-    return environment;
-  }
-
-  /**
-   * Get database configuration
-   */
-  private getDatabase() {
-    return databaseConfig;
-  }
-
-  /**
-   * Get Redis configuration
-   */
-  private getRedis() {
-    return redisConfig;
-  }
-
-  /**
-   * Get RabbitMQ configuration
-   */
-  private getRabbitMQ() {
-    return rabbitmqConfig;
-  }
-
-  /**
-   * Get mail configuration
-   */
-  private getMail() {
-    return mailConfig;
-  }
-
-  /**
    * Get Swagger configuration
    */
   public getSwagger() {

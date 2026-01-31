@@ -1,4 +1,3 @@
-// src/shared/middlewares/requestLogger.middleware.ts
 import { Request, Response, NextFunction } from 'express';
 import logger from '@utils/logger.util';
 import { v4 as uuidv4 } from 'uuid';

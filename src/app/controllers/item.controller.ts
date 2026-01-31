@@ -1,4 +1,3 @@
-// src/app/controllers/item.controller.ts
 import { Request, Response, NextFunction } from 'express';
 import itemService from '@services/item.service';
 import apiResponse from '@utils/response.util';

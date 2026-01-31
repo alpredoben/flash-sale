@@ -1,3 +1,4 @@
+/** eslint-disable-next-line @typescript-eslint/no-unused-vars */
 import express, { Request, Response, NextFunction } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';

@@ -1,4 +1,3 @@
-// src/routes/item.route.ts
 import { Router } from 'express';
 import itemController from '@controllers/item.controller';
 import authMiddleware from '@middlewares/auth.middleware';

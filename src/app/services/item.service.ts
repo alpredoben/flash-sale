@@ -1,4 +1,3 @@
-// src/app/services/item.service.ts
 import itemRepository from '@repositories/item.repository';
 import { Item } from '@models/item.model';
 import {

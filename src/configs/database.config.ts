@@ -1,7 +1,7 @@
 import { DataSource, DataSourceOptions } from 'typeorm';
 import { join } from 'path';
-import env from '@config/env.config';
-import logger from '@utils/logger.util';
+import env from './env.config';
+import logger from '../shared/utils/logger.util';
 
 class DatabaseConfig {
   private static instance: DatabaseConfig;

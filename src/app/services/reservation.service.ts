@@ -1,4 +1,3 @@
-// src/app/services/reservation.service.ts
 import reservationRepository from '@repositories/reservation.repository';
 import itemRepository from '@repositories/item.repository';
 import itemService from '@services/item.service';

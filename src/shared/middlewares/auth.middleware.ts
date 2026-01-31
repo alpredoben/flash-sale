@@ -1,4 +1,3 @@
-// src/shared/middlewares/auth.middleware.ts
 import { Request, Response, NextFunction } from 'express';
 import tokenizer from '@utils/tokenizer.util';
 import caching from '@config/caching.config';
