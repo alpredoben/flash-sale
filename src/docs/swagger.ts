@@ -53,20 +53,12 @@ const getTags = (): swaggerJsdoc.Tag[] => {
       description: 'User management endpoints',
     },
     {
-      name: 'Roles',
-      description: 'Role management endpoints',
-    },
-    {
-      name: 'Permissions',
-      description: 'Permission management endpoints',
-    },
-    {
-      name: 'Health',
-      description: 'Health check and monitoring endpoints',
-    },
-    {
       name: 'Items',
       description: 'Item management endpoints',
+    },
+    {
+      name: 'Reservations',
+      description: 'Reservation management endpoints',
     },
   ];
 };

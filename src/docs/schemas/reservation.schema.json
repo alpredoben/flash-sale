@@ -1,0 +1,34 @@
+{
+  "AddReservationBody": {
+    "type": "object",
+    "required": ["itemId", "quantity"],
+    "properties": {
+      "itemId": {
+        "type": "string",
+        "default": ""
+      },
+      "quantity": {
+        "type": "integer",
+        "default": 1
+      }
+    }
+  },
+  "CancelReservationBody": {
+    "type": "object",
+    "properties": {
+      "reason": {
+        "type": "string",
+        "default": ""
+      }
+    }
+  },
+  "AdminCancelReservationBody": {
+    "type": "object",
+    "properties": {
+      "reason": {
+        "type": "string",
+        "default": ""
+      }
+    }
+  }
+}

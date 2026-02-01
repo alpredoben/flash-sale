@@ -281,8 +281,6 @@ class RabbitMQConfig {
       { noAck: options.noAck ?? false }
     );
 
-    console.log({ consumeResult });
-
     this.activeConsumers.set(queue, consumeResult.consumerTag);
     return consumeResult.consumerTag;
   }

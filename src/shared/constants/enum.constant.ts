@@ -68,6 +68,3 @@ export enum En_PermissionAction {
   IMPORT = 'import',
 }
 
-export enum En_ReservationStatus {
-  BOOKED = 'BOOKED',
-}

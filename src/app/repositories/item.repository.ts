@@ -1,4 +1,4 @@
-import { Repository, In } from 'typeorm';
+import { Repository, In, EntityManager } from 'typeorm';
 import { Item } from '@models/item.model';
 import databaseConfig from '@config/database.config';
 import { En_ItemStatus } from '@constants/enum.constant';
@@ -141,21 +141,29 @@ class ItemRepository {
   }
 
   /** Get item with lock for update (for stock management) */
-  async findByIdWithLock(id: string): Promise<Item | null> {
-    return await this.repository
+
+  async findByIdWithLock(
+    id: string,
+    manager?: EntityManager
+  ): Promise<Item | null> {
+    const repo = manager ? manager.getRepository(Item) : this.repository;
+    const query = repo
       .createQueryBuilder(TableNames.Item)
       .where(`${TableNames.Item}.id = :id`, { id })
-      .setLock('pessimistic_write')
-      .getOne();
+      .setLock('pessimistic_write');
+
+    return await query.getOne();
   }
 
   /** Update stock atomically */
   async updateStock(
     id: string,
     stockDelta: number,
-    reservedStockDelta: number
+    reservedStockDelta: number,
+    manager?: EntityManager
   ): Promise<void> {
-    await this.repository
+    const repo = manager ? manager.getRepository(Item) : this.repository;
+    await repo
       .createQueryBuilder()
       .update(Item)
       .set({

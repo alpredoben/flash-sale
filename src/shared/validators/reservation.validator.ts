@@ -1,4 +1,4 @@
-import { query } from 'express-validator';
+import { query, ValidationChain, param } from 'express-validator';
 import { En_ReservationStatus } from '@constants/enum.constant';
 import { reqValidation } from '@validators/validation';
 import lang from '@lang/index';
@@ -16,19 +16,17 @@ class ReservationValidator {
   }
 
   private validateReservationId() {
-    return reqValidation('id', 'Reservation ID', 'param', false)
-      .isUUID()
+    return param('id')
+      .notEmpty()
       .withMessage(
-        lang.__('error.validation.uuid', { field: 'Reservation ID' })
+        lang.__('error.validation.required', { field: `Reservation ID` })
       );
   }
 
   /** Validation rules for creating reservation */
-  create() {
+  create(): ValidationChain[] {
     return [
-      reqValidation('itemId', 'Item ID', 'body', false)
-        .isUUID()
-        .withMessage('Item ID must be a valid UUID'),
+      reqValidation('itemId', 'Item ID', 'body', false),
 
       reqValidation('quantity', 'Quantity', 'body', false)
         .isInt({ min: 1 })
@@ -37,23 +35,20 @@ class ReservationValidator {
   }
 
   /** Validation rules for checkout */
-  checkout() {
+  checkout(): ValidationChain[] {
     return [this.validateReservationId()];
   }
 
   /** Validation rules for cancel */
-  cancel() {
+  cancel(): ValidationChain[] {
     return [
       this.validateReservationId(),
-
-      reqValidation('reason', 'Reason', 'body', true)
-        .isString()
-        .withMessage(lang.__('error.validation.string', { field: 'Reason' })),
+      reqValidation('reason', 'Reason', 'body', true),
     ];
   }
 
   /** Validation rules for admin cancel */
-  adminCancel() {
+  adminCancel(): ValidationChain[] {
     return [
       this.validateReservationId(),
 
@@ -69,7 +64,7 @@ class ReservationValidator {
   }
 
   /** Validation rules for getting reservation by ID */
-  getById() {
+  getById(): ValidationChain[] {
     return [this.validateReservationId()];
   }
 

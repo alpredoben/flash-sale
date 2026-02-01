@@ -70,12 +70,8 @@ class AuthMiddleware {
         return;
       }
 
-      console.log({ TOKEN: token, DECODED: decoded });
-
       // Check if user is cached
       let user = await caching.getCachedUser(decoded.userId);
-
-      console.log({ USER_CACHE: user });
 
       // If not cached, fetch from database and cache
       if (!user) {

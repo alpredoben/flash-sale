@@ -57,8 +57,6 @@ class UserRepository {
         .take(options.limit)
         .orderBy(`${TableNames.User}.${options.sort}`, options.order);
 
-      // console.log({ query: queryBuilder.getSql() });
-
       const [users, total] = await queryBuilder.getManyAndCount();
       return {
         results: users,

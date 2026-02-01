@@ -137,5 +137,10 @@
 	"error.auth.insufficient-permissions": "error.auth.insufficient-permissions",
 	"success.item.create": "success.item.create",
 	"success.item.statistic": "success.item.statistic",
-	"success.item.update-status": "success.item.update-status"
+	"success.item.update-status": "success.item.update-status",
+	"success.reservation.create": "success.reservation.create",
+	"success.reservation.fetch": "success.reservation.fetch",
+	"success.reservation.statistic": "success.reservation.statistic",
+	"success.reservation.checkout": "success.reservation.checkout",
+	"success.reservation.cancel": "success.reservation.cancel"
 }

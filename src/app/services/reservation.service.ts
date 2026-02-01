@@ -12,6 +12,7 @@ import { In_PaginationResult } from '@/interfaces/pagination.interface';
 import { En_ReservationStatus } from '@constants/enum.constant';
 import logger from '@utils/logger.util';
 import { AppDataSource } from '@config/database.config';
+import { Item } from '@/database/models/item.model';
 
 class ReservationService {
   private static instance: ReservationService;
@@ -44,7 +45,11 @@ class ReservationService {
       }
 
       // Get item with lock
-      const item = await itemRepository.findByIdWithLock(itemId);
+      const item = await itemRepository.findByIdWithLock(
+        itemId,
+        queryRunner.manager
+      );
+
       if (!item) {
         throw new Error('Item not found');
       }
@@ -66,6 +71,7 @@ class ReservationService {
       // Check if user has reached max per user limit
       const userReservedQty =
         await reservationRepository.getUserReservedQuantity(userId, itemId);
+
       if (userReservedQty + quantity > item.maxPerUser) {
         throw new Error(
           `You can only reserve up to ${item.maxPerUser} units of this item. You already have ${userReservedQty} reserved.`
@@ -78,11 +84,15 @@ class ReservationService {
       }
 
       // Reserve stock
-      await itemService.reserveStock(itemId, quantity);
-
-      // Generate reservation code
-      const reservationCode =
-        await reservationRepository.generateReservationCode();
+      await queryRunner.manager
+        .createQueryBuilder()
+        .update(Item)
+        .set({
+          reservedStock: () => `reserved_stock + ${quantity}`,
+          availableStock: () => `stock - (reserved_stock + ${quantity})`,
+        })
+        .where('id = :id', { id: itemId })
+        .execute();
 
       // Calculate expiry time
       const expiresAt = new Date();
@@ -90,32 +100,31 @@ class ReservationService {
         expiresAt.getMinutes() + this.RESERVATION_EXPIRY_MINUTES
       );
 
-      // Calculate total price
-      const totalPrice = item.price * quantity;
-
-      // Create reservation
-      const reservation = await reservationRepository.create({
+      const reservation = queryRunner.manager.create(Reservation, {
         userId,
         itemId,
         quantity,
         price: item.price,
-        totalPrice,
+        totalPrice: item.price * quantity,
         status: En_ReservationStatus.PENDING,
         expiresAt,
-        reservationCode,
+        reservationCode: await reservationRepository.generateReservationCode(
+          queryRunner.manager
+        ),
       });
+
+      const savedReservation = await queryRunner.manager.save(reservation);
 
       await queryRunner.commitTransaction();
 
       logger.info('Reservation created successfully', {
-        reservationId: reservation.id,
+        reservation: savedReservation,
         userId,
         itemId,
         quantity,
       });
 
-      // Reload with relations
-      return (await reservationRepository.findById(reservation.id))!;
+      return (await reservationRepository.findById(savedReservation.id))!;
     } catch (error) {
       await queryRunner.rollbackTransaction();
       logger.error('Error creating reservation', { error, userId, data });
@@ -138,8 +147,10 @@ class ReservationService {
       const { reservationId } = data;
 
       // Get reservation with lock
-      const reservation =
-        await reservationRepository.findByIdWithLock(reservationId);
+      const reservation = await reservationRepository.findByIdWithLock(
+        reservationId,
+        queryRunner.manager
+      );
       if (!reservation) {
         throw new Error('Reservation not found');
       }
@@ -163,8 +174,33 @@ class ReservationService {
         throw new Error('Reservation has expired');
       }
 
-      // Confirm stock (reduce total stock and reserved stock)
-      await itemService.confirmStock(reservation.itemId, reservation.quantity);
+      // Confirm stock (reduce total stock and reserved stock
+      const itemQuantity = reservation.quantity;
+      const myItem = await itemRepository.findByIdWithLock(
+        reservation.itemId,
+        queryRunner.manager
+      );
+
+      if (!myItem) {
+        throw new Error('Item not found');
+      }
+
+      // Update stock atomically (reduce both total and reserved stock)
+      await queryRunner.manager
+        .createQueryBuilder()
+        .update(Item)
+        .set({
+          stock: () => `stock + ${-itemQuantity}`,
+          reservedStock: () => `reserved_stock + ${-itemQuantity}`,
+          availableStock: () => `stock - reserved_stock`,
+        })
+        .where('id = :id', { id: reservation.itemId })
+        .execute();
+
+      logger.info('Stock confirmed successfully', {
+        itemId: reservation.itemId,
+        quantity: itemQuantity,
+      });
 
       // Update reservation status
       const updatedReservation = await reservationRepository.update(
@@ -172,7 +208,8 @@ class ReservationService {
         {
           status: En_ReservationStatus.CONFIRMED,
           confirmedAt: new Date(),
-        }
+        },
+        queryRunner.manager
       );
 
       await queryRunner.commitTransaction();
@@ -205,8 +242,10 @@ class ReservationService {
       const { reservationId, reason } = data;
 
       // Get reservation with lock
-      const reservation =
-        await reservationRepository.findByIdWithLock(reservationId);
+      const reservation = await reservationRepository.findByIdWithLock(
+        reservationId,
+        queryRunner.manager
+      );
       if (!reservation) {
         throw new Error('Reservation not found');
       }
@@ -226,7 +265,24 @@ class ReservationService {
       }
 
       // Release stock
-      await itemService.releaseStock(reservation.itemId, reservation.quantity);
+      const myItem = await itemRepository.findByIdWithLock(
+        reservation.itemId,
+        queryRunner.manager
+      );
+
+      if (!myItem) {
+        throw new Error('Item not found');
+      }
+
+      await queryRunner.manager
+        .createQueryBuilder()
+        .update(Item)
+        .set({
+          reservedStock: () => `reserved_stock + ${-reservation.quantity}`,
+          availableStock: () => `stock - reserved_stock`,
+        })
+        .where('id = :id', { id: reservation.itemId })
+        .execute();
 
       // Update reservation status
       const updatedReservation = await reservationRepository.update(
@@ -235,7 +291,8 @@ class ReservationService {
           status: En_ReservationStatus.CANCELLED,
           cancelledAt: new Date(),
           cancellationReason: reason,
-        }
+        },
+        queryRunner.manager
       );
 
       await queryRunner.commitTransaction();

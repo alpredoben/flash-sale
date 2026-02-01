@@ -1,0 +1,200 @@
+{
+  "/reservations": {
+    "post": {
+      "tags": ["Reservations"],
+      "summary": "Add new reservation",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "requestBody": {
+        "required": false,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/AddReservationBody"
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "OK",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResponseDefault"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/reservations/me": {
+    "get": {
+      "tags": ["Reservations"],
+      "summary": "Check my reservation",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "in": "query",
+          "name": "status",
+          "schema": {
+            "type": "string",
+            "enum": ["pending", "confirmed", "expired", "cancelled"]
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "OK",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResponseDefault"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/reservations/stats": {
+    "get": {
+      "tags": ["Reservations"],
+      "summary": "Get reservation statistics",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "OK",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResponseDefault"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/reservations/{id}": {
+    "get": {
+      "tags": ["Reservations"],
+      "summary": "Find reservation by id",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "OK",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResponseDefault"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/reservations/{id}/checkout": {
+    "post": {
+      "tags": ["Reservations"],
+      "summary": "Checkout reservation id",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "OK",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResponseDefault"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/reservations/{id}/cancel": {
+    "post": {
+      "tags": ["Reservations"],
+      "summary": "Cancel reservation id",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "requestBody": {
+        "required": false,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/CancelReservationBody"
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "OK",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResponseDefault"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

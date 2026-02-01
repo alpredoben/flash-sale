@@ -1,9 +1,10 @@
-import { Repository, LessThan, In } from 'typeorm';
+import { Repository, LessThan, In, EntityManager } from 'typeorm';
 import { Reservation } from '@models/reservation.model';
 import databaseConfig from '@config/database.config';
 import { En_ReservationStatus } from '@constants/enum.constant';
 import { In_ReservationListParams } from '@interfaces/dto.interface';
 import { In_PaginationResult } from '@/interfaces/pagination.interface';
+import { TableNames } from '@/shared/constants/tableName.constant';
 
 class ReservationRepository {
   private static instance: ReservationRepository;
@@ -44,8 +45,14 @@ class ReservationRepository {
   }
 
   /** Update reservation */
-  async update(id: string, data: Partial<Reservation>): Promise<Reservation> {
-    await this.repository.update(id, data);
+  async update(
+    id: string,
+    data: Partial<Reservation>,
+    manager?: EntityManager
+  ): Promise<Reservation> {
+    const repo = manager ? manager.getRepository(Reservation) : this.repository;
+
+    await repo.update(id, data);
     const updated = await this.findById(id);
     if (!updated) {
       throw new Error('Reservation not found after update');
@@ -195,15 +202,18 @@ class ReservationRepository {
   /** Get user's total reserved quantity for an item */
   async getUserReservedQuantity(
     userId: string,
-    itemId: string
+    itemId: string,
+    manager?: EntityManager
   ): Promise<number> {
-    const result = await this.repository
-      .createQueryBuilder('reservation')
-      .select('SUM(reservation.quantity)', 'total')
-      .where('reservation.userId = :userId', { userId })
-      .andWhere('reservation.itemId = :itemId', { itemId })
-      .andWhere('reservation.status IN (:...statuses)', {
-        statuses: [
+    const repo = manager ? manager.getRepository(Reservation) : this.repository;
+
+    const result = await repo
+      .createQueryBuilder(TableNames.Reservation)
+      .select(`SUM(${TableNames.Reservation}.quantity)`, 'total')
+      .where(`${TableNames.Reservation}.userId = :userId`, { userId })
+      .andWhere(`${TableNames.Reservation}.itemId = :itemId`, { itemId })
+      .andWhere(`${TableNames.Reservation}.status IN (:...arrayStatus)`, {
+        arrayStatus: [
           En_ReservationStatus.PENDING,
           En_ReservationStatus.CONFIRMED,
         ],
@@ -214,28 +224,32 @@ class ReservationRepository {
   }
 
   /** Find reservation with lock */
-  async findByIdWithLock(id: string): Promise<Reservation | null> {
-    return await this.repository
-      .createQueryBuilder('reservation')
-      .where('reservation.id = :id', { id })
+  async findByIdWithLock(
+    id: string,
+    manager?: EntityManager
+  ): Promise<Reservation | null> {
+    const repo = manager ? manager.getRepository(Reservation) : this.repository;
+    return await repo
+      .createQueryBuilder(TableNames.Reservation)
+      .where(`${TableNames.Reservation}.id = :id`, { id })
       .setLock('pessimistic_write')
       .getOne();
   }
 
   /** Generate unique reservation code */
-  async generateReservationCode(): Promise<string> {
+  async generateReservationCode(manager?: EntityManager): Promise<string> {
+    const repo = manager ? manager.getRepository(Reservation) : this.repository;
+
     const timestamp = Date.now().toString(36).toUpperCase();
     const random = Math.random().toString(36).substring(2, 8).toUpperCase();
     const code = `RSV-${timestamp}-${random}`;
 
-    // Check if code already exists (very unlikely)
-    const exists = await this.repository.findOne({
+    const exists = await repo.findOne({
       where: { reservationCode: code },
     });
 
     if (exists) {
-      // Recursively generate new code if collision occurs
-      return this.generateReservationCode();
+      return this.generateReservationCode(manager);
     }
 
     return code;
