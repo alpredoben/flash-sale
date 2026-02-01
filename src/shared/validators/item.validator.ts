@@ -1,4 +1,4 @@
-import { query } from 'express-validator';
+import { query, param } from 'express-validator';
 import { En_ItemStatus } from '@constants/enum.constant';
 import { reqValidation } from '@validators/validation';
 import lang from '@lang/index';
@@ -21,7 +21,6 @@ class ItemValidator {
       reqValidation('sku', 'SKU', 'body', false)
         .isString()
         .withMessage(lang.__('error.validation.string', { field: 'SKU' }))
-        .trim()
         .isLength({ min: 3, max: 100 })
         .withMessage(
           lang.__('error.validation.min-max', {
@@ -34,7 +33,6 @@ class ItemValidator {
       reqValidation('name', 'Name', 'body', false)
         .isString()
         .withMessage(lang.__('error.validation.string', { field: 'Name' }))
-        .trim()
         .isLength({ min: 3, max: 255 })
         .withMessage(
           lang.__('error.validation.min-max', {
@@ -85,9 +83,9 @@ class ItemValidator {
   }
 
   private validationItemId() {
-    return reqValidation('id', 'Item ID', 'param', false)
-      .isUUID()
-      .withMessage(lang.__('error.validation.uuid', { field: 'Item ID' }));
+    return param('id')
+      .notEmpty()
+      .withMessage(lang.__('error.validation.required', { field: `ID` }));
   }
 
   /** Validation rules for updating item */

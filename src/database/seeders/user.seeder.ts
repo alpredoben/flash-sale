@@ -13,6 +13,11 @@ export const UserSeeder = async (dataSource: DataSource) => {
   const adminRole = await roleRepo.findOneBy({ slug: 'superadmin' });
   const hashedPassword = await bcrypt.hash('password123', 10);
 
+  // {
+  //   "email": "admin@example.com",
+  //   "password": "password123"
+  // }
+
   const adminExist = await userRepo.findOneBy({ email: 'admin@example.com' });
   if (!adminExist) {
     const admin = userRepo.create({

@@ -98,14 +98,4 @@ router.get(
   authController.getProfile.bind(authController)
 );
 
-/**
- * @desc    Resend verification email
- * @path  [POST] /api/v1/auth/resend-verification
- */
-router.post(
-  '/resend-verification',
-  authMiddleware.authenticate,
-  authController.resendVerificationEmail.bind(authController)
-);
-
 export default router;

@@ -2,7 +2,7 @@ import {
   En_ItemStatus,
   En_PermissionAction,
   En_PermissionCategory,
-  En_ReservationStatus
+  En_ReservationStatus,
 } from '@constants/enum.constant';
 
 export interface In_DTO_Register {
@@ -33,6 +33,7 @@ export interface In_DTO_ForgotPassword {
 
 export interface In_DTO_ResetPassword {
   token: string;
+  email: string;
   password: string;
   confirmPassword: string;
 }

@@ -12,11 +12,23 @@ export interface In_AuthResponse {
     status: string;
     emailVerified: boolean;
   };
-  tokens: {
+  tokens?: {
     accessToken: string;
     refreshToken: string;
     expiresIn: number;
   };
+}
+
+export interface In_UserResponse {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string | null;
+  avatar?: string | null;
+  roles: string[];
+  status: string;
+  emailVerified: boolean;
 }
 
 export interface In_TokenPayload {

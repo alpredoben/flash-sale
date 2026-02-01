@@ -48,8 +48,7 @@ export class CreateUserTable1769832255379 implements MigrationInterface {
           },
           {
             name: 'password',
-            type: 'varchar',
-            length: '255',
+            type: 'text',
             isNullable: false,
           },
           {
@@ -83,6 +82,11 @@ export class CreateUserTable1769832255379 implements MigrationInterface {
           },
           {
             name: 'email_verification_expires',
+            type: 'timestamp',
+            isNullable: true,
+          },
+          {
+            name: 'email_verification_at',
             type: 'timestamp',
             isNullable: true,
           },

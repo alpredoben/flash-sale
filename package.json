@@ -5,6 +5,7 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "node ./node_modules/ts-node-dev/lib/bin.js --respawn --transpile-only --exit-child -r tsconfig-paths/register ./src/server.ts",
+    "debug": "node ./node_modules/ts-node-dev/lib/bin.js --respawn --transpile-only --exit-child -r tsconfig-paths/register ./src/debug.ts",
     "build": "tsc && tsc-alias",
     "start": "node -r tsconfig-paths/register dist/server.js",
     "start:prod": "NODE_ENV=production node -r tsconfig-paths/register dist/server.js",

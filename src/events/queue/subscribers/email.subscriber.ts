@@ -25,13 +25,68 @@ const QUEUE_MAP: Record<string, string> = {
 
 class EmailSubscriber {
   private static instance: EmailSubscriber;
-  private isRunning = false;
+  private isProcessing = false;
 
   public static getInstance(): EmailSubscriber {
     if (!EmailSubscriber.instance) {
       EmailSubscriber.instance = new EmailSubscriber();
     }
     return EmailSubscriber.instance;
+  }
+
+  public async start(): Promise<void> {
+    if (this.isProcessing) {
+      logger.warn('[Email Subscriber] ---> 🏃‍♂️🏃‍♂️🏃‍♂️🏃‍♂️ Already running');
+      return;
+    }
+
+    try {
+      // 1. Connect RabbitMQ (no-op if already connected)
+      if (!rabbitmqConfig.isConnected()) {
+        await rabbitmqConfig.connect();
+      }
+
+      // 2. Connect SMTP (no-op if already connected)
+      if (!smtpMail.isMailConnected()) {
+        await smtpMail.connect();
+      }
+
+      // 3. Declare queues + bindings, then subscribe
+      await this.setupQueues();
+      await this.runSubscribe();
+
+      this.isProcessing = true;
+      logger.info(
+        '[Email Subscriber] ---> ✅ Started — listening on all email queues'
+      );
+    } catch (error) {
+      logger.error('[Email Subscriber] ---> ❌ Failed to start', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      throw error;
+    }
+  }
+
+  public async stop(): Promise<void> {
+    if (!this.isProcessing) {
+      logger.warn('Queue processor is not running');
+      return;
+    }
+
+    try {
+      logger.info('[Email Subscriber] ---> Stop email subscriber processing');
+
+      for (const queue of Object.values(QUEUE_MAP)) {
+        await rabbitmqConfig.stopConsume(queue);
+      }
+
+      this.isProcessing = false;
+      logger.info('[Email Subscriber] ---> ✅ Stop email subscriber successfully');
+    } catch (error) {
+      logger.error('[Email Subscriber] ---> ❌ Error while stopping', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
   }
 
   private async setupQueues(): Promise<void> {

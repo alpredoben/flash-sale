@@ -124,5 +124,18 @@
 	"error.validation.email": "error.validation.email",
 	"error.validation.min": "error.validation.min",
 	"error.validation.string": "error.validation.string",
-	"error.validation.uuid": "error.validation.uuid"
+	"error.validation.uuid": "error.validation.uuid",
+	"error.validation.data": "error.validation.data",
+	"success.auth.register": "success.auth.register",
+	"success.auth.verify-email": "success.auth.verify-email",
+	"success.auth.login": "success.auth.login",
+	"success.user.fetch-profile": "success.user.fetch-profile",
+	"success.auth.forgot-password": "success.auth.forgot-password",
+	"success.auth.reset-password": "success.auth.reset-password",
+	"success.default.fetch": "success.default.fetch",
+	"success.item.fetch": "success.item.fetch",
+	"error.auth.insufficient-permissions": "error.auth.insufficient-permissions",
+	"success.item.create": "success.item.create",
+	"success.item.statistic": "success.item.statistic",
+	"success.item.update-status": "success.item.update-status"
 }

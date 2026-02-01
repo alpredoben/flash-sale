@@ -1,0 +1,336 @@
+{
+  "/items": {
+    "get": {
+      "tags": ["Items"],
+      "summary": "Fetch item data",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "in": "query",
+          "name": "page",
+          "schema": { "type": "integer", "default": 1 }
+        },
+        {
+          "in": "query",
+          "name": "limit",
+          "schema": { "type": "integer", "default": 10 }
+        },
+        { "in": "query", "name": "search", "schema": { "type": "string" } },
+        {
+          "in": "query",
+          "name": "status",
+          "schema": {
+            "type": "string",
+            "enum": ["active", "inactive", "sold_out", "out_of_stock"]
+          }
+        },
+        {
+          "in": "query",
+          "name": "sort",
+          "schema": { "type": "string", "default": "createdAt" }
+        },
+        {
+          "in": "query",
+          "name": "order",
+          "schema": {
+            "type": "string",
+            "enum": ["ASC", "DESC"],
+            "default": "DESC"
+          }
+        },
+        {
+          "in": "query",
+          "name": "minPrice",
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "in": "query",
+          "name": "maxPrice",
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "in": "query",
+          "name": "inStock",
+          "schema": {
+            "type": "boolean"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "OK",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResponseDefault"
+              }
+            }
+          }
+        }
+      }
+    },
+    "post": {
+      "tags": ["Items"],
+      "summary": "Store a new item data",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "requestBody": {
+        "required": false,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/CreateItemBody"
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "OK",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResponseDefault"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/items/low-stock": {
+    "get": {
+      "tags": ["Items"],
+      "summary": "Get low stock items",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "in": "query",
+          "name": "threshold",
+          "schema": { "type": "integer", "default": 10 }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "OK",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResponseDefault"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/items/stats": {
+    "get": {
+      "tags": ["Items"],
+      "summary": "Get item statistics",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "OK",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResponseDefault"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/items/{id}": {
+    "get": {
+      "tags": ["Items"],
+      "summary": "Find item by id",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "OK",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResponseDefault"
+              }
+            }
+          }
+        }
+      }
+    },
+    "put": {
+      "tags": ["Items"],
+      "summary": "Update item by id",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "requestBody": {
+        "required": false,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/UpdateItemBody"
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "OK",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResponseDefault"
+              }
+            }
+          }
+        }
+      }
+    },
+    "delete": {
+      "tags": ["Items"],
+      "summary": "Delete item by id",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "OK",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResponseDefault"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/items/sale/active": {
+    "get": {
+      "tags": ["Items"],
+      "summary": "Get active sales item",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "OK",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResponseDefault"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/items/{id}/status": {
+    "patch": {
+      "tags": ["Items"],
+      "summary": "Update item status",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "requestBody": {
+        "required": false,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/UpdateStatusItemBody"
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "OK",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResponseDefault"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

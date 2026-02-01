@@ -2,7 +2,7 @@
   "/auth/register": {
     "post": {
       "tags": ["Authentication"],
-      "summary": "Register User",
+      "summary": "Register Account",
       "requestBody": {
         "required": false,
         "content": {
@@ -27,20 +27,160 @@
       }
     }
   },
-  "/auth/login":{
+  "/auth/login": {
     "post": {
       "tags": ["Authentication"],
-      "summary": "Register User",
+      "summary": "Login Account",
       "requestBody": {
         "required": false,
         "content": {
           "application/json": {
             "schema": {
-              "$ref": "#/components/schemas/RegisterBody"
+              "$ref": "#/components/schemas/LoginBody"
             }
           }
         }
       },
+      "responses": {
+        "200": {
+          "description": "OK",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResponseDefault"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/auth/verify-email": {
+    "post": {
+      "tags": ["Authentication"],
+      "summary": "Email Verification",
+      "requestBody": {
+        "required": false,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/VerifyEmailBody"
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "OK",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResponseDefault"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/auth/forgot-password": {
+    "post": {
+      "tags": ["Authentication"],
+      "summary": "Forgot Password",
+      "requestBody": {
+        "required": false,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ForgotPasswordBody"
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "OK",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResponseDefault"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/auth/reset-password": {
+    "post": {
+      "tags": ["Authentication"],
+      "summary": "Reset Password",
+      "requestBody": {
+        "required": false,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ResetPasswordBody"
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "OK",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResponseDefault"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/auth/change-password": {
+    "post": {
+      "tags": ["Authentication"],
+      "summary": "Manual Change Password",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "requestBody": {
+        "required": false,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ChangePasswordBody"
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "OK",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResponseDefault"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/auth/profile": {
+    "get": {
+      "tags": ["Authentication"],
+      "summary": "Profile",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
       "responses": {
         "200": {
           "description": "OK",

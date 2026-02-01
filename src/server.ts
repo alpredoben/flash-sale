@@ -15,8 +15,8 @@ import rateLimiterMiddleware from './shared/middlewares/rateLimiter.middleware';
 import apiResponse from '@utils/response.util';
 import apiRoute from '@routes/index';
 import errorMiddleware from '@middlewares/error.middleware';
-import expiredReservationJob from '@/events/jobs/expired-reservation.job';
-import queueProcessor from '@/events/queue/subscribers/processor.queue';
+// import expiredReservationJob from '@/events/jobs/expired-reservation.job';
+import emailSubscriber from '@/events/queue/subscribers/email.subscriber';
 
 class ApplicationServer {
   private app: Application;
@@ -72,13 +72,8 @@ class ApplicationServer {
   /** Language */
   public setupLanguage() {
     return (req: Request, _res: Response, next: NextFunction) => {
-      if (req?.headers?.lang) {
-        const local: string | any = req?.headers?.lang;
-        lang.setLocale(local);
-      } else {
-        lang.setLocale(environment.appLang);
-        req.headers.lang = environment.appLang;
-      }
+      const selectedLang = (req.headers.lang as string) || environment.appLang;
+      lang.setLocale(selectedLang);
       next();
     };
   }
@@ -96,6 +91,8 @@ class ApplicationServer {
   /** Middleware */
   private setupMiddleware(): void {
     logger.info('🏃‍♂️🏃‍♂️🏃‍♂️🏃‍♂️ Setup Middleware 🏃‍♂️🏃‍♂️🏃‍♂️🏃‍♂️');
+
+    this.app.use(this.setupLanguage());
 
     // Security Headers
     this.app.use(appMiddleware.helmet());
@@ -252,7 +249,7 @@ class ApplicationServer {
     try {
       logger.info('🏃‍♂️🏃‍♂️🏃‍♂️🏃‍♂️ Setup Background Cron Job 🏃‍♂️🏃‍♂️🏃‍♂️🏃‍♂️');
 
-      await expiredReservationJob.start();
+      // await expiredReservationJob.start();
 
       logger.info('✅ Cron job initialize successfully on background');
     } catch (error) {
@@ -283,11 +280,10 @@ class ApplicationServer {
 
       // Stop background jobs
       logger.info('📦 Stopping background jobs...');
-      await expiredReservationJob.stop();
+      // await expiredReservationJob.stop();
 
       // Stop queue processors
-      logger.info('📦 Stopping queue processors...');
-      await queueProcessor.stopProcessing();
+      await emailSubscriber.stop();
 
       // Close all configurations (Database, Redis, RabbitMQ)
       logger.info('📦 Closing configuration connections...');
@@ -305,7 +301,7 @@ class ApplicationServer {
     try {
       logger.info('🏃‍♂️🏃‍♂️🏃‍♂️🏃‍♂️ Setup Queue Processing 🏃‍♂️🏃‍♂️🏃‍♂️🏃‍♂️');
 
-      await queueProcessor.startProcessing();
+      await emailSubscriber.start();
 
       logger.info('✅ Queue processing initialize successfully on background');
     } catch (error) {

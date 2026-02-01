@@ -4,6 +4,7 @@ import databaseConfig from '@config/database.config';
 import { En_ItemStatus } from '@constants/enum.constant';
 import { In_ItemListParams } from '@interfaces/dto.interface';
 import { In_PaginationResult } from '@interfaces/pagination.interface';
+import { TableNames } from '@/shared/constants/tableName.constant';
 
 class ItemRepository {
   private static instance: ItemRepository;
@@ -81,38 +82,42 @@ class ItemRepository {
 
     const skip = (page - 1) * limit;
 
-    const queryBuilder = this.repository.createQueryBuilder('item');
+    const queryBuilder = this.repository.createQueryBuilder(TableNames.Item);
 
     // Apply filters
     if (search) {
       queryBuilder.andWhere(
-        '(item.name ILIKE :search OR item.sku ILIKE :search OR item.description ILIKE :search)',
+        `(${TableNames.Item}.name ILIKE :search OR ${TableNames.Item}.sku ILIKE :search OR ${TableNames.Item}.description ILIKE :search)`,
         { search: `%${search}%` }
       );
     }
 
     if (status) {
-      queryBuilder.andWhere('item.status = :status', { status });
+      queryBuilder.andWhere(`${TableNames.Item}.status = :status`, { status });
     }
 
     if (minPrice !== undefined) {
-      queryBuilder.andWhere('item.price >= :minPrice', { minPrice });
+      queryBuilder.andWhere(`${TableNames.Item}.price >= :minPrice`, {
+        minPrice,
+      });
     }
 
     if (maxPrice !== undefined) {
-      queryBuilder.andWhere('item.price <= :maxPrice', { maxPrice });
+      queryBuilder.andWhere(`${TableNames.Item}.price <= :maxPrice`, {
+        maxPrice,
+      });
     }
 
     if (inStock !== undefined) {
       if (inStock) {
-        queryBuilder.andWhere('item.availableStock > 0');
+        queryBuilder.andWhere(`${TableNames.Item}.availableStock > 0`);
       } else {
-        queryBuilder.andWhere('item.availableStock = 0');
+        queryBuilder.andWhere(`${TableNames.Item}.availableStock = 0`);
       }
     }
 
     // Apply sorting
-    queryBuilder.orderBy(`item.${sortBy}`, sortOrder);
+    queryBuilder.orderBy(`${TableNames.Item}.${sortBy}`, sortOrder);
 
     // Get total count
     const total = await queryBuilder.getCount();
@@ -138,8 +143,8 @@ class ItemRepository {
   /** Get item with lock for update (for stock management) */
   async findByIdWithLock(id: string): Promise<Item | null> {
     return await this.repository
-      .createQueryBuilder('item')
-      .where('item.id = :id', { id })
+      .createQueryBuilder(TableNames.Item)
+      .where(`${TableNames.Item}.id = :id`, { id })
       .setLock('pessimistic_write')
       .getOne();
   }
@@ -186,12 +191,14 @@ class ItemRepository {
     const now = new Date();
 
     return await this.repository
-      .createQueryBuilder('item')
-      .where('item.status = :status', { status: En_ItemStatus.ACTIVE })
-      .andWhere('item.saleStartDate <= :now', { now })
-      .andWhere('item.saleEndDate >= :now', { now })
-      .andWhere('item.availableStock > 0')
-      .orderBy('item.createdAt', 'DESC')
+      .createQueryBuilder(TableNames.Item)
+      .where(`${TableNames.Item}.status = :status`, {
+        status: En_ItemStatus.ACTIVE,
+      })
+      .andWhere(`${TableNames.Item}.saleStartDate <= :now`, { now })
+      .andWhere(`${TableNames.Item}.saleEndDate >= :now`, { now })
+      .andWhere(`${TableNames.Item}.availableStock > 0`)
+      .orderBy(`${TableNames.Item}.createdAt`, 'DESC')
       .getMany();
   }
 
@@ -204,12 +211,15 @@ class ItemRepository {
 
   /** Get low stock items */
   async findLowStockItems(threshold: number = 10): Promise<Item[]> {
-    return await this.repository
-      .createQueryBuilder('item')
-      .where('item.availableStock <= :threshold', { threshold })
-      .andWhere('item.status = :status', { status: En_ItemStatus.ACTIVE })
-      .orderBy('item.availableStock', 'ASC')
-      .getMany();
+    const query = this.repository
+      .createQueryBuilder(TableNames.Item)
+      .where(`${TableNames.Item}.availableStock <= :threshold`, { threshold })
+      .andWhere(`${TableNames.Item}.status = :status`, {
+        status: En_ItemStatus.ACTIVE,
+      })
+      .orderBy(`${TableNames.Item}.availableStock`, 'ASC');
+
+    return await query.getMany();
   }
 
   /** Increment version (optimistic locking) */

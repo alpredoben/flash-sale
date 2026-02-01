@@ -4,6 +4,7 @@ import databaseConfig from '@config/database.config';
 import logger from '@utils/logger.util';
 import { TableNames } from '@/shared/constants/tableName.constant';
 import { In_PaginationParams } from '@/interfaces/pagination.interface';
+import { En_UserStatus } from '@/shared/constants/enum.constant';
 
 class UserRepository {
   private static instance: UserRepository;
@@ -56,6 +57,8 @@ class UserRepository {
         .take(options.limit)
         .orderBy(`${TableNames.User}.${options.sort}`, options.order);
 
+      // console.log({ query: queryBuilder.getSql() });
+
       const [users, total] = await queryBuilder.getManyAndCount();
       return {
         results: users,
@@ -107,6 +110,7 @@ class UserRepository {
     try {
       return await this.repository
         .createQueryBuilder(TableNames.User)
+        .addSelect(`${TableNames.User}.password`)
         .leftJoinAndSelect(`${TableNames.User}.roles`, TableNames.Role)
         .leftJoinAndSelect(
           `${TableNames.Role}.permissions`,
@@ -129,6 +133,7 @@ class UserRepository {
       return await this.repository
         .createQueryBuilder(TableNames.User)
         .addSelect(`${TableNames.User}.passwordResetToken`)
+        .addSelect(`${TableNames.User}.password`)
         .where(`${TableNames.User}.passwordResetToken = :token`, { token })
         .andWhere(`${TableNames.User}.passwordResetExpires > :now`, {
           now: new Date(),
@@ -193,6 +198,8 @@ class UserRepository {
         emailVerified: true,
         emailVerificationToken: null,
         emailVerificationExpires: null,
+        status: En_UserStatus.ACTIVE,
+        emailVerificationAt: new Date().toISOString(),
       });
       return await this.findById(id);
     } catch (error) {
@@ -254,4 +261,8 @@ class UserRepository {
   }
 }
 
-export default UserRepository.getInstance();
+const userRepository = UserRepository.getInstance();
+
+export { UserRepository };
+
+export default userRepository;

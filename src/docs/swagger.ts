@@ -64,6 +64,10 @@ const getTags = (): swaggerJsdoc.Tag[] => {
       name: 'Health',
       description: 'Health check and monitoring endpoints',
     },
+    {
+      name: 'Items',
+      description: 'Item management endpoints',
+    },
   ];
 };
 

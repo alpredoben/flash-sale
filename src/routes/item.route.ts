@@ -26,6 +26,43 @@ router.get(
 );
 
 /**
+ * @desc    Create new item
+ * @path   [POST] /api/v1/items
+ * @access   Private (Admin/Super Admin)
+ */
+router.post(
+  '/',
+  authMiddleware.authenticate,
+  authMiddleware.authorize(['admin', 'superadmin']),
+  ...validationMiddleware.validateRequest(itemValidator.create()),
+  itemController.create.bind(itemController)
+);
+
+/**
+ * @desc    Get low stock items
+ * @path    [GET] /api/v1/items/low-stock
+ * @access   Private (Admin/Super Admin)
+ */
+router.get(
+  '/low-stock',
+  authMiddleware.authenticate,
+  authMiddleware.authorize(['admin', 'superadmin']),
+  itemController.getLowStockItems.bind(itemController)
+);
+
+/**
+ * @desc    Get item statistics
+ * @path   [GET] /api/v1/items/stats
+ * @access  Private (Admin only)
+ */
+router.get(
+  '/stats',
+  authMiddleware.authenticate,
+  authMiddleware.authorize(['admin', 'superadmin']),
+  itemController.getStats.bind(itemController)
+);
+
+/**
  * @desc   Get item by ID
  * @path   [GET] /api/v1/items/:id
  */
@@ -36,27 +73,14 @@ router.get(
 );
 
 /**
- * @desc    Create new item
- * @path   [POST] /api/v1/items
- * @access  Private (Admin)
- */
-router.post(
-  '/',
-  authMiddleware.authenticate,
-  authMiddleware.authorize(['admin']),
-  ...validationMiddleware.validateRequest(itemValidator.create()),
-  itemController.create.bind(itemController)
-);
-
-/**
  * @desc   Update item
  * @path   [PUT] /api/v1/items/:id
- * @access  Private (Admin)
+ * @access  Private (Admin/Super Admin)
  */
 router.put(
   '/:id',
   authMiddleware.authenticate,
-  authMiddleware.authorize(['admin']),
+  authMiddleware.authorize(['admin', 'superadmin']),
   ...validationMiddleware.validateRequest(itemValidator.update()),
   itemController.update.bind(itemController)
 );
@@ -64,12 +88,12 @@ router.put(
 /**
  * @desc    Delete item
  * @path   [DELETE] /api/v1/items/:id
- * @access  Private (Admin)
+ * @access  Private (Admin/Super Admin)
  */
 router.delete(
   '/:id',
   authMiddleware.authenticate,
-  authMiddleware.authorize(['admin']),
+  authMiddleware.authorize(['admin', 'superadmin']),
   ...validationMiddleware.validateRequest(itemValidator.delete()),
   itemController.delete.bind(itemController)
 );
@@ -82,33 +106,9 @@ router.delete(
 router.patch(
   '/:id/status',
   authMiddleware.authenticate,
-  authMiddleware.authorize(['admin']),
+  authMiddleware.authorize(['admin', 'superadmin']),
   ...validationMiddleware.validateRequest(itemValidator.updateStatus()),
   itemController.updateStatus.bind(itemController)
-);
-
-/**
- * @desc    Get low stock items
- * @path    [GET] /api/v1/items/low-stock
- * @access  Private (Admin only)
- */
-router.get(
-  '/low-stock',
-  authMiddleware.authenticate,
-  authMiddleware.authorize(['admin']),
-  itemController.getLowStockItems.bind(itemController)
-);
-
-/**
- * @desc    Get item statistics
- * @path   [GET] /api/v1/items/stats
- * @access  Private (Admin only)
- */
-router.get(
-  '/stats',
-  authMiddleware.authenticate,
-  authMiddleware.authorize(['admin']),
-  itemController.getStats.bind(itemController)
 );
 
 export default router;

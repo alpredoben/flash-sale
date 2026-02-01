@@ -127,8 +127,12 @@ class AuthController {
   ): Promise<void> {
     try {
       const payload: In_DTO_VerifyEmail = req.body;
-      await authService.verifyEmail(payload);
-      apiResponse.sendSuccess(res, lang.__('success.auth.verify-email'));
+      const result = await authService.verifyEmail(payload);
+      apiResponse.sendSuccess(
+        res,
+        lang.__('success.auth.verify-email'),
+        result
+      );
     } catch (error) {
       logger.error('Email verification error', {
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -186,28 +190,6 @@ class AuthController {
       apiResponse.sendSuccess(res, lang.__('success.auth.change-password'));
     } catch (error) {
       logger.error('Change password error', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        userId: req.user?.id,
-      });
-      next(error);
-    }
-  }
-
-  /** Resend verification email - [POST] /api/v1/auth/resend-verification */
-  async resendVerificationEmail(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
-    try {
-      const userId = req.user.id;
-
-      // TODO: Implement resend verification email logic
-      logger.info('Resend verification email requested', { userId });
-
-      apiResponse.sendSuccess(res, lang.__('success.auth.send-verified'));
-    } catch (error) {
-      logger.error('Resend verification email error', {
         error: error instanceof Error ? error.message : 'Unknown error',
         userId: req.user?.id,
       });

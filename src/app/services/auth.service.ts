@@ -1,4 +1,3 @@
-import { In_AuthResponse } from '@/interfaces/auth.interface';
 import {
   In_DTO_ForgotPassword,
   In_DTO_Login,
@@ -30,8 +29,11 @@ class AuthService {
     return AuthService.instance;
   }
 
-  private async makeAuthResponse(user: User): Promise<In_AuthResponse> {
-    const roleNames = user.roles.map((r: Role) => r.name);
+  private async makeAuthResponse(
+    user: User,
+    type: string = 'login'
+  ): Promise<Record<string, any>> {
+    const roleNames = user.roles.map((r: Role) => r.slug);
 
     const payload = {
       userId: user.id,
@@ -39,54 +41,61 @@ class AuthService {
       roles: roleNames,
     };
 
-    // Generate tokens
-    const accessToken = tokenizer.generateAccessToken({
-      ...payload,
-      type: 'access',
-    });
+    const userPayload = {
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      phone: user.phone ?? null,
+      avatar: user.avatar ?? null,
+      roles: roleNames,
+      status: user.status,
+      emailVerified: user.emailVerified,
+    };
 
-    const refreshToken = tokenizer.generateAccessToken({
-      ...payload,
-      type: 'refresh',
-    });
+    if (type.toLowerCase() === 'login') {
+      // Generate tokens
+      const accessToken = tokenizer.generateAccessToken({
+        ...payload,
+        type: 'access',
+      });
 
-    // Caching payload user
-    await caching.cacheUser(
-      user.id,
-      {
-        id: user.id,
-        email: user.email,
-        lastName: user.lastName,
-        roles: roleNames,
-        isActive: user.isActive(),
-        isEmailVerified: user.emailVerified,
-        status: user.status,
-      },
-      1800 // 30 minutes
-    );
+      const refreshToken = tokenizer.generateAccessToken({
+        ...payload,
+        type: 'refresh',
+      });
+
+      // Caching payload user
+      await caching.cacheUser(
+        user.id,
+        {
+          id: user.id,
+          email: user.email,
+          lastName: user.lastName,
+          roles: roleNames,
+          isActive: user.isActive(),
+          isEmailVerified: user.emailVerified,
+          status: user.status,
+        },
+        1800 // 30 minutes
+      );
+
+      return {
+        tokens: {
+          accessToken,
+          refreshToken,
+          expiresIn: 1500, //tokenizer.getAccessTokenExpiration(),
+        },
+      };
+    }
 
     return {
-      user: {
-        id: user.id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        phone: user.phone ?? null,
-        avatar: user.avatar ?? null,
-        roles: roleNames,
-        status: user.status,
-        emailVerified: user.emailVerified,
-      },
-      tokens: {
-        accessToken,
-        refreshToken,
-        expiresIn: 1500, //tokenizer.getAccessTokenExpiration(),
-      },
+      user: userPayload,
     };
   }
 
   /** Register user */
-  async register(payload: In_DTO_Register): Promise<In_AuthResponse> {
+  async register(payload: In_DTO_Register): Promise<Record<string, any>> {
     try {
       const existingUser = await userRepository.findByEmail(payload.email);
 
@@ -126,6 +135,8 @@ class AuthService {
         phone: payload.phone,
         status: En_UserStatus.PENDING_VERIFICATION,
         emailVerified: false,
+        emailVerificationToken: emailVerified.token,
+        emailVerificationExpires: emailVerified.expires,
         roles: [userRole],
       } as Partial<User>);
 
@@ -156,7 +167,7 @@ class AuthService {
         });
       }
 
-      return await this.makeAuthResponse(user);
+      return await this.makeAuthResponse(user, 'register');
     } catch (error) {
       logger.error('Error during registration', {
         email: payload.email,
@@ -167,7 +178,7 @@ class AuthService {
   }
 
   /** Login user */
-  async login(payload: In_DTO_Login): Promise<In_AuthResponse> {
+  async login(payload: In_DTO_Login): Promise<Record<string, any>> {
     try {
       // Find user with password
       const user = await userRepository.findByEmailWithPassword(payload.email);
@@ -190,6 +201,7 @@ class AuthService {
         payload.password,
         user.password
       );
+
       if (!isPasswordValid) {
         throw new Error('Invalid email or password');
       }
@@ -214,7 +226,7 @@ class AuthService {
   }
 
   /** Refresh access token */
-  async refreshToken(token: string): Promise<In_AuthResponse> {
+  async refreshToken(token: string): Promise<Record<string, any>> {
     try {
       const decoded = tokenizer.verifyRefreshToken(token);
 
@@ -283,7 +295,7 @@ class AuthService {
   }
 
   /** Verify email */
-  async verifyEmail(payload: In_DTO_VerifyEmail): Promise<User> {
+  async verifyEmail(payload: In_DTO_VerifyEmail): Promise<Record<string, any>> {
     try {
       const user = await userRepository.findByEmailVerificationToken(
         payload.token
@@ -293,6 +305,12 @@ class AuthService {
         throw new Error('Invalid or expired verification token');
       }
 
+      if (user.status !== En_UserStatus.PENDING_VERIFICATION) {
+        throw new Error(
+          `Verification email failed. Your status account is ${En_UserStatus.PENDING_VERIFICATION}`
+        );
+      }
+
       // Verify email
       const verifiedUser = await userRepository.verifyEmail(user.id);
 
@@ -300,18 +318,20 @@ class AuthService {
         throw new Error('Failed to verify email');
       }
 
-      if (verifiedUser.status == En_UserStatus.PENDING_VERIFICATION) {
-        await userRepository.update(user.id, {
-          status: En_UserStatus.ACTIVE,
-        });
-      }
-
       logger.info('Email verified successfully', {
         userId: user.id,
         email: user.email,
       });
 
-      return verifiedUser;
+      return {
+        id: verifiedUser.id,
+        firstName: verifiedUser.firstName,
+        lastName: verifiedUser.lastName,
+        email: verifiedUser.email,
+        status: verifiedUser.status,
+        emailVerified: verifiedUser.emailVerified,
+        emailVerificationAt: verifiedUser.emailVerificationAt,
+      };
     } catch (error) {
       logger.error('Error verifying email', {
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -325,6 +345,7 @@ class AuthService {
     try {
       // Find user by email
       const user = await userRepository.findByEmail(payload.email);
+
       if (!user) {
         // Don't reveal if email exists
         logger.info('Password reset requested for non-existent email', {

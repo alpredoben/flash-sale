@@ -47,19 +47,12 @@ class AuthValidator {
 
       reqValidation('email', 'Email', 'body', false)
         .isEmail()
-        .withMessage(lang.__('error.validation.email'))
-        .normalizeEmail(),
+        .withMessage(lang.__('error.validation.email')),
 
       reqValidation('password', 'Password', 'body', false)
         .isLength({ min: 8 })
         .withMessage(
           lang.__('error.validation.min', { field: 'Password', min: '8' })
-        )
-        .matches(
-          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/
-        )
-        .withMessage(
-          'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
         ),
 
       reqValidation(
@@ -74,9 +67,7 @@ class AuthValidator {
         return true;
       }),
 
-      reqValidation('phone', 'Phone', 'body', true)
-        .matches(/^\+?[1-9]\d{1,14}$/)
-        .withMessage('Invalid phone number format'),
+      reqValidation('phone', 'Phone', 'body', true),
     ];
   }
 
@@ -85,8 +76,7 @@ class AuthValidator {
     return [
       reqValidation('email', 'Email', 'body', false)
         .isEmail()
-        .withMessage(lang.__('error.validation.email'))
-        .normalizeEmail(),
+        .withMessage(lang.__('error.validation.email')),
       reqValidation('password', 'Password', 'body', false),
     ];
   }
@@ -107,9 +97,7 @@ class AuthValidator {
     return [
       reqValidation('token', 'Token', 'body', false)
         .isString()
-        .withMessage(lang.__('error.validation.string', { field: 'token' }))
-        .isLength({ min: 64, max: 64 })
-        .withMessage('Invalid token format'),
+        .withMessage(lang.__('error.validation.string', { field: 'token' })),
     ];
   }
 
@@ -118,8 +106,7 @@ class AuthValidator {
     return [
       reqValidation('email', 'Email', 'body', false)
         .isEmail()
-        .withMessage(lang.__('error.validation.email'))
-        .normalizeEmail(),
+        .withMessage(lang.__('error.validation.email')),
     ];
   }
 
@@ -128,20 +115,12 @@ class AuthValidator {
     return [
       reqValidation('token', 'Token', 'body', false)
         .isString()
-        .withMessage(lang.__('error.validation.string', { field: 'token' }))
-        .isLength({ min: 64, max: 64 })
-        .withMessage('Invalid token format'),
+        .withMessage(lang.__('error.validation.string', { field: 'token' })),
 
       reqValidation('password', 'Password', 'body', false)
         .isLength({ min: 8 })
         .withMessage(
           lang.__('error.validation.min', { field: 'Password', min: '8' })
-        )
-        .matches(
-          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/
-        )
-        .withMessage(
-          'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
         ),
 
       reqValidation(
@@ -167,12 +146,6 @@ class AuthValidator {
         .isLength({ min: 8 })
         .withMessage(
           lang.__('error.validation.min', { field: 'New Password', min: '8' })
-        )
-        .matches(
-          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/
-        )
-        .withMessage(
-          'New password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
         )
         .custom((value, { req }) => {
           if (value === req.body.currentPassword) {

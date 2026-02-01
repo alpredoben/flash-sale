@@ -1,0 +1,89 @@
+{
+  "CreateItemBody": {
+    "type": "object",
+    "required": ["sku", "name", "price", "stock"],
+    "properties": {
+      "sku": {
+        "type": "string",
+        "default": ""
+      },
+      "name": {
+        "type": "string",
+        "default": ""
+      },
+      "description": {
+        "type": "string",
+        "default": ""
+      },
+      "price": {
+        "type": "integer"
+      },
+      "originalPrice": {
+        "type": "integer"
+      },
+      "stock": {
+        "type": "integer"
+      },
+      "status": {
+        "type": "string"
+      },
+      "imageUrl": {
+        "type": "string"
+      },
+      "saleStartDate": {
+        "type": "string"
+      },
+      "saleEndDate": {
+        "type": "string"
+      },
+      "maxPerUser": {
+        "type": "integer"
+      }
+    }
+  },
+  "UpdateItemBody": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "default": ""
+      },
+      "description": {
+        "type": "string",
+        "default": ""
+      },
+      "price": {
+        "type": "integer"
+      },
+      "originalPrice": {
+        "type": "integer"
+      },
+      "stock": {
+        "type": "integer"
+      },
+      "status": {
+        "type": "string"
+      },
+      "imageUrl": {
+        "type": "string"
+      },
+      "saleStartDate": {
+        "type": "string"
+      },
+      "saleEndDate": {
+        "type": "string"
+      },
+      "maxPerUser": {
+        "type": "integer"
+      }
+    }
+  },
+  "UpdateStatusItemBody": {
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      }
+    }
+  }
+}

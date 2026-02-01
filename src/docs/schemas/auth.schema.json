@@ -34,9 +34,62 @@
     "required": ["email", "password"],
     "properties": {
       "email": {
+        "type": "string",
+        "default": "admin@example.com"
+      },
+      "password": {
+        "type": "string",
+        "default": "password123"
+      }
+    }
+  },
+  "VerifyEmailBody": {
+    "type": "object",
+    "required": ["token"],
+    "properties": {
+      "token": {
+        "type": "string"
+      }
+    }
+  },
+  "ForgotPasswordBody": {
+    "type": "object",
+    "required": ["email"],
+    "properties": {
+      "email": {
+        "type": "string"
+      }
+    }
+  },
+  "ResetPasswordBody": {
+    "type": "object",
+    "required": ["token", "email", "password", "confirmPassword"],
+    "properties": {
+      "token": {
+        "type": "string"
+      },
+      "email": {
         "type": "string"
       },
       "password": {
+        "type": "string"
+      },
+      "confirmPassword": {
+        "type": "string"
+      }
+    }
+  },
+  "ChangePasswordBody": {
+    "type": "object",
+    "required": ["currentPassword", "newPassword", "confirmPassword"],
+    "properties": {
+      "currentPassword": {
+        "type": "string"
+      },
+      "newPassword": {
+        "type": "string"
+      },
+      "confirmPassword": {
         "type": "string"
       }
     }

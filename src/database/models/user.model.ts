@@ -26,7 +26,7 @@ export class User extends AppBaseEntity {
   @Column({ type: 'varchar', length: 255, unique: true })
   email: string;
 
-  @Column({ type: 'varchar', length: 255, select: false })
+  @Column({ type: 'text', select: false })
   password: string;
 
   @Column({
@@ -92,6 +92,13 @@ export class User extends AppBaseEntity {
 
   @Column({ name: 'last_login', type: 'timestamp', nullable: true })
   lastLogin?: Date;
+
+  @Column({
+    name: 'email_verification_at',
+    type: 'timestamp',
+    nullable: true,
+  })
+  emailVerificationAt?: Date | null;
 
   // @OneToMany(() => RefreshToken, (token) => token.user)
   // refreshTokens: RefreshToken[];
