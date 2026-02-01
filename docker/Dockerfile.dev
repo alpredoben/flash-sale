@@ -30,6 +30,8 @@ COPY .prettierrc* ./
 # Copy application source code
 COPY . .
 
+# RUN cp .env.example .env
+
 # Create necessary directories
 RUN mkdir -p logs/error logs/combined logs/access backups uploads
 

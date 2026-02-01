@@ -1,0 +1,50 @@
+{
+  "ResponseDefault": {
+    "type": "object",
+    "properties": {
+      "success": {
+        "type": "boolean"
+      },
+      "message": {
+        "type": "string"
+      },
+      "data": {
+        "type": "object"
+      }
+    }
+  },
+  "ResponsePagination": {
+    "type": "object",
+    "properties": {
+      "success": {
+        "type": "boolean"
+      },
+      "message": {
+        "type": "string"
+      },
+      "data": {
+        "type": "object"
+      },
+      "errors": {
+        "type": "object"
+      },
+      "meta": {
+        "type": "object"
+      }
+    }
+  },
+  "ResponseError": {
+    "type": "object",
+    "properties": {
+      "success": {
+        "type": "boolean"
+      },
+      "message": {
+        "type": "string"
+      },
+      "errors": {
+        "type": "object"
+      }
+    }
+  }
+}

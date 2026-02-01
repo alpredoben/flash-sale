@@ -3,7 +3,6 @@ import databaseConfig, { AppDataSource } from '@config/database.config';
 import redisConfig from '@config/redis.config';
 import rabbitmqConfig from '@config/rabbitmq.config';
 import mailConfig from '@/configs/smtp.config';
-import swaggerConfig from '@docs/swagger';
 
 /**
  * Configuration class that manages all system configurations
@@ -174,13 +173,6 @@ class Config {
   public isInitialized(): boolean {
     return this.initialized;
   }
-
-  /**
-   * Get Swagger configuration
-   */
-  public getSwagger() {
-    return swaggerConfig;
-  }
 }
 
 // Export individual configurations for direct access
@@ -191,7 +183,6 @@ export {
   redisConfig,
   rabbitmqConfig,
   mailConfig,
-  swaggerConfig,
 };
 
 // Export singleton instance

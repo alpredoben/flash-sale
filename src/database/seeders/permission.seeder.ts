@@ -1,11 +1,12 @@
 import {
   En_PermissionAction,
   En_PermissionCategory,
-} from '@constants/enum.constant';
-import { PERMISSION_RESOURCES } from '@constants/global.constant';
+} from '../../shared/constants/enum.constant';
+import { PERMISSION_RESOURCES } from '../../shared/constants/global.constant';
+import { DataSource } from 'typeorm';
+import { Permission } from '../models/permission.model';
 
-export const PERMISSION_DEFINITIONS = [
-  // User permissions
+const PERMISSION_DEFINITIONS = [
   {
     name: 'Create Users',
     slug: 'users_create',
@@ -343,3 +344,17 @@ export const PERMISSION_DEFINITIONS = [
     isSystem: true,
   },
 ];
+
+export const PermissionSeeder = async (dataSource: DataSource) => {
+  const repository = dataSource.getRepository(Permission);
+
+  console.log('📦 Seeding Permissions...');
+  for (const data of PERMISSION_DEFINITIONS) {
+    const exists = await repository.findOneBy({ slug: data.slug });
+    if (!exists) {
+      const permission = repository.create(data);
+      await repository.save(permission);
+    }
+  }
+  console.log('✅ Permissions seeded!');
+};

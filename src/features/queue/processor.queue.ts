@@ -53,6 +53,38 @@ class QueueProcessor {
     }
   }
 
+  public async stopProcessing(): Promise<void> {
+    if (!this.isProcessing) {
+      logger.warn('Queue processor is not running');
+      return;
+    }
+
+    try {
+      logger.info('Stopping queue processor...');
+
+      // Get list queue will stopped
+      const activeQueues = [
+        'email_queue',
+        'reservation_queue',
+        'notification_queue',
+      ];
+
+      // Stop consumer
+      for (const queueName of activeQueues) {
+        await rabbitmqConfig.stopConsume(queueName);
+        logger.info(`Stopped consuming from ${queueName}`);
+      }
+
+      this.isProcessing = false;
+      logger.info('✅ Queue processor stopped successfully');
+    } catch (error) {
+      logger.error('❌ Error during queue processor shutdown', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      throw error;
+    }
+  }
+
   /**
    * Consume Email Queue
    */

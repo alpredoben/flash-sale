@@ -166,7 +166,6 @@ class MailSMTP {
         process.cwd(),
         'src',
         'mail',
-        'templates',
         `${templateName}.hbs`
       );
 

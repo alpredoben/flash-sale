@@ -17,7 +17,7 @@ class DatabaseConfig {
   }
 
   public getDataSourceOptions(): DataSourceOptions {
-    return {
+    const data: DataSourceOptions = {
       type: 'postgres',
       host: env.dbHost,
       port: env.dbPort,
@@ -38,6 +38,7 @@ class DatabaseConfig {
         connectionTimeoutMillis: 5000,
       },
     };
+    return data;
   }
 
   /**

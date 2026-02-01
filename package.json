@@ -16,6 +16,7 @@
     "migration:show": "npm run typeorm -- migration:show -d src/configs/database.config.ts",
     "schema:sync": "npm run typeorm -- schema:sync -d src/configs/database.config.ts",
     "schema:drop": "npm run typeorm -- schema:drop -d src/configs/database.config.ts",
+    "db:seed": "ts-node src/database/seeders/index.ts",
     "test": "jest --detectOpenHandles --forceExit",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage --detectOpenHandles --forceExit",

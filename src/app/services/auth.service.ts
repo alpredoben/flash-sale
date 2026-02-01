@@ -16,6 +16,7 @@ import { Role } from '@/database/models/role.model';
 import tokenizer from '@utils/tokenizer.util';
 import caching from '@config/caching.config';
 import encryption from '@utils/encryption.util';
+import emailPublisher from '@/features/publisher/email.publisher';
 
 class AuthService {
   private static instance: AuthService;
@@ -132,6 +133,28 @@ class AuthService {
         userId: user.id,
         email: user.email,
       });
+
+      // Publish email verification
+      try {
+        await emailPublisher.publishVerificationEmail(
+          user.email,
+          user.fullName,
+          emailVerified.token,
+          emailVerified.expires,
+          user.id
+        );
+
+        logger.info('Verification email event published', {
+          userId: user.id,
+          email: user.email,
+        });
+      } catch (error) {
+        logger.error('Failed to publish verification email event', {
+          userId: user.id,
+          email: user.email,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+      }
 
       return await this.makeAuthResponse(user);
     } catch (error) {
@@ -326,8 +349,27 @@ class AuthService {
         email: user.email,
       });
 
-      // TODO: Send password reset email
-      // await emailService.sendPasswordResetEmail(user.email, passwordResetToken);
+      // Publish password reset email event to RabbitMQ
+      try {
+        await emailPublisher.publishPasswordResetEmail(
+          user.email,
+          user.fullName,
+          passwordResetToken,
+          passwordResetExpires,
+          user.id
+        );
+
+        logger.info('Password reset email event published', {
+          userId: user.id,
+          email: user.email,
+        });
+      } catch (error) {
+        logger.error('Failed to publish password reset email event', {
+          userId: user.id,
+          email: user.email,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+      }
     } catch (error) {
       logger.error('Error requesting password reset', {
         email: payload.email,
@@ -366,8 +408,25 @@ class AuthService {
         email: user.email,
       });
 
-      // Send password changed notification email
-      // await emailService.sendPasswordChangedEmail(user.email);
+      // Publish password changed email event to RabbitMQ
+      try {
+        await emailPublisher.publishPasswordChangedEmail(
+          user.email,
+          user.fullName,
+          user.id
+        );
+
+        logger.info('Password changed email event published', {
+          userId: user.id,
+          email: user.email,
+        });
+      } catch (error) {
+        logger.error('Failed to publish password changed email event', {
+          userId: user.id,
+          email: user.email,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+      }
     } catch (error) {
       logger.error('Error resetting password', {
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -426,8 +485,24 @@ class AuthService {
         userId,
       });
 
-      // Send password changed notification email
-      // await emailService.sendPasswordChangedEmail(user.email);
+      // Publish password changed email event to RabbitMQ
+      try {
+        await emailPublisher.publishPasswordChangedEmail(
+          user.email,
+          user.fullName,
+          userId
+        );
+
+        logger.info('Password changed email event published', {
+          userId,
+          email: user.email,
+        });
+      } catch (error) {
+        logger.error('Failed to publish password changed email event', {
+          userId,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+      }
     } catch (error) {
       logger.error('Error changing password', {
         userId,

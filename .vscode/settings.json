@@ -38,6 +38,7 @@
     "appendfsync",
     "appendonly",
     "cpus",
+    "customfav",
     "dpage",
     "everysec",
     "fanout",

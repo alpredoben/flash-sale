@@ -3,7 +3,8 @@ import 'reflect-metadata';
 import express, { Application, Request, Response, NextFunction } from 'express';
 
 import swaggerUi from 'swagger-ui-express';
-import config, { environment, swaggerConfig } from '@config/index';
+import config, { environment } from '@config/index';
+import { getSwaggerSpec, getSwaggerUIOptions } from '@docs/swagger';
 
 import logger from '@utils/logger.util';
 import appMiddleware from '@/shared/middlewares/app.middleware';
@@ -183,16 +184,19 @@ class ApplicationServer {
       return apiResponse.sendSuccess(res, message, payload);
     });
 
+    const swaggerSpec = getSwaggerSpec(environment);
+    const uiOptions = getSwaggerUIOptions(environment);
+
     if (environment.nodeEnv !== 'production') {
       this.app.use(
         '/api-docs',
         swaggerUi.serve,
-        swaggerUi.setup(swaggerConfig, {
+        swaggerUi.setup(swaggerSpec, {
           explorer: true,
-          customCss: '.swagger-ui .topbar { display: none }',
-          customSiteTitle: 'Flash Sale API Documentation',
+          ...uiOptions,
         })
       );
+
       logger.info(
         `📚 Swagger documentation available at ${environment.appUrl}/api-docs`
       );

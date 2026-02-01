@@ -74,7 +74,7 @@ class AuthValidator {
         return true;
       }),
 
-      reqValidation('phone', 'Phone', 'body', false)
+      reqValidation('phone', 'Phone', 'body', true)
         .matches(/^\+?[1-9]\d{1,14}$/)
         .withMessage('Invalid phone number format'),
     ];

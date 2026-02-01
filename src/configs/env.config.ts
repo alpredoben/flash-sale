@@ -1,7 +1,11 @@
 import dotenv from 'dotenv';
 import path from 'path';
 
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+const envPath = path.resolve(__dirname, '../../.env');
+
+dotenv.config({ path: envPath });
+
+console.log(`Env Path:`, envPath);
 
 class EnvironmentConfig {
   private static instance: EnvironmentConfig;
@@ -55,14 +59,6 @@ class EnvironmentConfig {
   public readonly mailFrom: string;
   public readonly mailFromName: string;
 
-  // OAuth
-  public readonly googleClientId: string;
-  public readonly googleClientSecret: string;
-  public readonly googleCallbackUrl: string;
-  public readonly githubClientId: string;
-  public readonly githubClientSecret: string;
-  public readonly githubCallbackUrl: string;
-
   // RabbitMQ
   public readonly rabbitmqHost: string;
   public readonly rabbitmqPort: number;
@@ -84,12 +80,9 @@ class EnvironmentConfig {
   // Logging
   public readonly logLevel: string;
   public readonly logDir: string;
+  public readonly logFormat: string;
 
-  // Pagination
-  public readonly defaultPageSize: number;
-  public readonly maxPageSize: number;
-
-  // Frontend
+  // URL
   public readonly frontendUrl: string;
 
   // Session
@@ -98,33 +91,33 @@ class EnvironmentConfig {
   private constructor() {
     // Application
     this.appLang = process.env.APP_LANGUAGE ?? 'en';
-    this.nodeEnv = process.env.NODE_ENV || 'development';
-    this.appName = process.env.APP_NAME || 'Professional-REST-API';
-    this.appPort = parseInt(process.env.APP_PORT || '3000', 10);
-    this.appUrl = process.env.APP_URL || 'http://localhost:3000';
-    this.apiVersion = process.env.API_VERSION || 'v1';
+    this.nodeEnv = process.env.NODE_ENV ?? 'development';
+    this.appName = process.env.APP_NAME ?? 'Professional-REST-API';
+    this.appPort = parseInt(process.env.APP_PORT ?? '3000', 10);
+    this.appUrl = process.env.APP_URL ?? 'http://localhost:3000';
+    this.apiVersion = process.env.API_VERSION ?? 'v1';
 
     // Database
-    this.dbHost = process.env.DB_HOST || 'localhost';
-    this.dbPort = parseInt(process.env.DB_PORT || '5432', 10);
-    this.dbUsername = process.env.DB_USERNAME || 'postgres';
-    this.dbPassword = process.env.DB_PASSWORD || 'postgres';
-    this.dbDatabase = process.env.DB_DATABASE || 'rest_api_db';
+    this.dbHost = process.env.DB_HOST ?? 'localhost';
+    this.dbPort = parseInt(process.env.DB_PORT ?? '5432', 10);
+    this.dbUsername = process.env.DB_USERNAME ?? 'admin';
+    this.dbPassword = process.env.DB_PASSWORD ?? 'password';
+    this.dbDatabase = process.env.DB_DATABASE ?? 'db_flash_sale';
     this.dbSynchronize = process.env.DB_SYNCHRONIZE === 'true';
     this.dbLogging = process.env.DB_LOGGING === 'true';
 
     // Redis
-    this.redisHost = process.env.REDIS_HOST || 'localhost';
-    this.redisPort = parseInt(process.env.REDIS_PORT || '6379', 10);
-    this.redisPassword = process.env.REDIS_PASSWORD || '';
-    this.redisDb = parseInt(process.env.REDIS_DB || '0', 10);
+    this.redisHost = process.env.REDIS_HOST ?? 'localhost';
+    this.redisPort = parseInt(process.env.REDIS_PORT ?? '6379', 10);
+    this.redisPassword = process.env.REDIS_PASSWORD ?? '';
+    this.redisDb = parseInt(process.env.REDIS_DB ?? '0', 10);
 
     // JWT
-    this.jwtAccessSecret = process.env.JWT_ACCESS_SECRET || 'change-me-access';
+    this.jwtAccessSecret = process.env.JWT_ACCESS_SECRET ?? 'change-me-access';
     this.jwtRefreshSecret =
-      process.env.JWT_REFRESH_SECRET || 'change-me-refresh';
-    this.jwtAccessExpiration = process.env.JWT_ACCESS_EXPIRATION || '15m';
-    this.jwtRefreshExpiration = process.env.JWT_REFRESH_EXPIRATION || '7d';
+      process.env.JWT_REFRESH_SECRET ?? 'change-me-refresh';
+    this.jwtAccessExpiration = process.env.JWT_ACCESS_EXPIRATION ?? '15m';
+    this.jwtRefreshExpiration = process.env.JWT_REFRESH_EXPIRATION ?? '7d';
 
     // Encryption
     this.bcryptSaltRounds = parseInt(
@@ -151,28 +144,20 @@ class EnvironmentConfig {
     this.corsCredentials = process.env.CORS_CREDENTIALS === 'true';
 
     // Email
-    this.mailHost = process.env.MAIL_HOST || 'smtp.mailtrap.io';
-    this.mailPort = parseInt(process.env.MAIL_PORT || '2525', 10);
-    this.mailUser = process.env.MAIL_USER || '';
-    this.mailPassword = process.env.MAIL_PASSWORD || '';
-    this.mailFrom = process.env.MAIL_FROM || 'noreply@app.com';
-    this.mailFromName = process.env.MAIL_FROM_NAME || 'App';
-
-    // OAuth
-    this.googleClientId = process.env.GOOGLE_CLIENT_ID || '';
-    this.googleClientSecret = process.env.GOOGLE_CLIENT_SECRET || '';
-    this.googleCallbackUrl = process.env.GOOGLE_CALLBACK_URL || '';
-    this.githubClientId = process.env.GITHUB_CLIENT_ID || '';
-    this.githubClientSecret = process.env.GITHUB_CLIENT_SECRET || '';
-    this.githubCallbackUrl = process.env.GITHUB_CALLBACK_URL || '';
+    this.mailHost = process.env.MAIL_HOST ?? 'smtp.mailtrap.io';
+    this.mailPort = parseInt(process.env.MAIL_PORT ?? '2525', 10);
+    this.mailUser = process.env.MAIL_USER ?? '';
+    this.mailPassword = process.env.MAIL_PASSWORD ?? '';
+    this.mailFrom = process.env.MAIL_FROM ?? 'noreply@app.com';
+    this.mailFromName = process.env.MAIL_FROM_NAME ?? 'App';
 
     // RabbitMQ
-    this.rabbitmqHost = process.env.RABBITMQ_HOST || 'localhost';
-    this.rabbitmqPort = parseInt(process.env.RABBITMQ_PORT || '5672', 10);
-    this.rabbitmqUser = process.env.RABBITMQ_USER || 'guest';
-    this.rabbitmqPassword = process.env.RABBITMQ_PASSWORD || 'guest';
-    this.rabbitmqVhost = process.env.RABBITMQ_VHOST || '/';
-    this.rabbitmqExchange = process.env.RABBITMQ_EXCHANGE || 'api_exchange';
+    this.rabbitmqHost = process.env.RABBITMQ_HOST ?? 'localhost';
+    this.rabbitmqPort = parseInt(process.env.RABBITMQ_PORT ?? '5672', 10);
+    this.rabbitmqUser = process.env.RABBITMQ_USER ?? 'guest';
+    this.rabbitmqPassword = process.env.RABBITMQ_PASSWORD ?? 'guest';
+    this.rabbitmqVhost = process.env.RABBITMQ_VHOST ?? '/';
+    this.rabbitmqExchange = process.env.RABBITMQ_EXCHANGE ?? 'api_exchange';
 
     // Captcha
     this.captchaEnabled = process.env.CAPTCHA_ENABLED === 'true';
@@ -186,18 +171,15 @@ class EnvironmentConfig {
       process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://localhost:4318';
 
     // Logging
-    this.logLevel = process.env.LOG_LEVEL || 'info';
-    this.logDir = process.env.LOG_DIR || path.join(process.cwd(), 'logs');
+    this.logLevel = process.env.LOG_LEVEL ?? 'info';
+    this.logDir = process.env.LOG_DIR ?? path.join(process.cwd(), 'logs');
+    this.logFormat = process.env.LOG_FORMAT ?? 'json';
 
-    // Pagination
-    this.defaultPageSize = parseInt(process.env.DEFAULT_PAGE_SIZE || '10', 10);
-    this.maxPageSize = parseInt(process.env.MAX_PAGE_SIZE || '100', 10);
-
-    // Frontend
-    this.frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+    // URL
+    this.frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:3001';
 
     // Session
-    this.sessionSecret = process.env.SESSION_SECRET || 'change-me-session';
+    this.sessionSecret = process.env.SESSION_SECRET ?? 'change-me-session';
 
     this.validate();
   }
@@ -240,4 +222,5 @@ class EnvironmentConfig {
   }
 }
 
+export { EnvironmentConfig };
 export default EnvironmentConfig.getInstance();

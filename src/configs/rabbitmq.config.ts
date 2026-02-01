@@ -29,6 +29,8 @@ class RabbitMQConfig {
   private reconnectTimer: NodeJS.Timeout | null = null;
   private readonly reconnectInterval = 5000;
 
+  private activeConsumers: Map<string, string> = new Map();
+
   private constructor() {}
 
   public static getInstance(): RabbitMQConfig {
@@ -245,15 +247,20 @@ class RabbitMQConfig {
     );
   }
 
-  /**
-   * Consume
-   */
+  /** Consume messages with advanced options like prefetch */
   public async subscribe(
     queue: string,
     handler: (data: any, raw: ConsumeMessage) => Promise<void>,
-    options: { noAck?: boolean } = {}
-  ): Promise<void> {
-    await this.getChannel().consume(
+    options: { noAck?: boolean; prefetch?: number } = {}
+  ): Promise<string> {
+    const channel = this.getChannel();
+
+    // Set prefetch if existed (Flow Control)
+    if (options.prefetch) {
+      await channel.prefetch(options.prefetch);
+    }
+
+    const consumeResult = await channel.consume(
       queue,
       async (msg) => {
         if (!msg) return;
@@ -261,14 +268,23 @@ class RabbitMQConfig {
         try {
           const payload = JSON.parse(msg.content.toString());
           await handler(payload, msg);
-          if (!options.noAck) this.channel!.ack(msg);
+          if (!options.noAck) {
+            this.channel!.ack(msg);
+          }
         } catch (err) {
           logger.error('Consumer error', { error: err });
-          if (!options.noAck) this.channel!.nack(msg, false, true);
+          if (!options.noAck) {
+            channel!.nack(msg, false, true);
+          }
         }
       },
       { noAck: options.noAck ?? false }
     );
+
+    console.log({ consumeResult });
+
+    this.activeConsumers.set(queue, consumeResult.consumerTag);
+    return consumeResult.consumerTag;
   }
 
   /**
@@ -291,7 +307,7 @@ class RabbitMQConfig {
     queue: string,
     handler: (data: any, raw: ConsumeMessage) => Promise<void>,
     options: { noAck?: boolean; prefetch?: number } = {}
-  ): Promise<void> {
+  ): Promise<string> {
     const channel = this.getChannel();
 
     // Set prefetch if existed (Flow Control)
@@ -299,37 +315,54 @@ class RabbitMQConfig {
       await channel.prefetch(options.prefetch);
     }
 
-    await channel.consume(
+    const consumeResult = await channel.consume(
       queue,
       async (msg) => {
         if (!msg) return;
-
         try {
-          // Parsing message content
           const payload = JSON.parse(msg.content.toString());
-
-          // Handle function execution
           await handler(payload, msg);
-
-          // Acknowledge message,  If success and not mode noAck
           if (!options.noAck) {
             channel.ack(msg);
           }
         } catch (err) {
-          logger.error('Consumer error', {
-            queue,
-            error: err instanceof Error ? err.message : err,
-          });
-
-          // If failed, send  Negative Acknowledge (nack)
-          // requeue: true if message resend again or false if stop message (go to DLQ)
+          logger.error('Consumer error', { queue, error: err });
           if (!options.noAck) {
-            channel.nack(msg, false, false); // false di akhir berarti tidak otomatis masuk antrean lagi (requeue)
+            channel.nack(msg, false, false);
           }
         }
       },
       { noAck: options.noAck ?? false }
     );
+    this.activeConsumers.set(queue, consumeResult.consumerTag);
+    return consumeResult.consumerTag;
+  }
+
+  /** Stop new consume */
+  public async stopConsume(queue: string): Promise<void> {
+    const consumerTag = this.activeConsumers.get(queue);
+
+    if (!consumerTag) {
+      logger.warn(`No active consumer found for queue: ${queue}`);
+      return;
+    }
+
+    try {
+      const channel = this.getChannel();
+      await channel.cancel(consumerTag);
+
+      // Remove from active consumer
+      this.activeConsumers.delete(queue);
+
+      logger.info(
+        `Successfully stopped consumer for queue: ${queue} (Tag: ${consumerTag})`
+      );
+    } catch (error) {
+      logger.error(`Failed to cancel consumer for queue: ${queue}`, {
+        error: error instanceof Error ? error.message : error,
+      });
+      throw error;
+    }
   }
 }
 

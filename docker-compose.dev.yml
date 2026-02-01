@@ -20,62 +20,64 @@ services:
   #     # Database
   #     DB_HOST: fs_pg_dev
   #     DB_PORT: 5432
-  #     DB_USER: ${DB_USER:-postgres}
-  #     DB_PASSWORD: ${DB_PASSWORD:-postgres123}
-  #     DB_NAME: ${DB_NAME:-flashsale_db}
+  #     DB_USER: ${DB_USER:-admin}
+  #     DB_PASSWORD: ${DB_PASSWORD:-QueenSQL}
+  #     DB_NAME: ${DB_NAME:-db_flash_sale}
   #     DB_SYNCHRONIZE: ${DB_SYNCHRONIZE:-false}
-  #     DB_LOGGING: ${DB_LOGGING:-false}
+  #     DB_LOGGING: ${DB_LOGGING:-true}
   #     DB_POOL_MIN: ${DB_POOL_MIN:-2}
   #     DB_POOL_MAX: ${DB_POOL_MAX:-10}
 
   #     # Redis
-  #     REDIS_HOST: redis
+  #     REDIS_HOST: fs_redis_dev
   #     REDIS_PORT: 6379
-  #     REDIS_PASSWORD: ${REDIS_PASSWORD:-redis123}
+  #     REDIS_PASSWORD: ${REDIS_PASSWORD:-QueenRedis}
   #     REDIS_DB: ${REDIS_DB:-0}
   #     REDIS_KEY_PREFIX: ${REDIS_KEY_PREFIX:-flashsale:}
   #     REDIS_TTL: ${REDIS_TTL:-3600}
 
   #     # RabbitMQ
-  #     RABBITMQ_HOST: rabbitmq
+  #     RABBITMQ_HOST: fs_rabbitmq_dev
   #     RABBITMQ_PORT: 5672
   #     RABBITMQ_USER: ${RABBITMQ_USER:-admin}
-  #     RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-admin123}
+  #     RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-QueenRMQ}
   #     RABBITMQ_VHOST: ${RABBITMQ_VHOST:-/}
+  #     RABBITMQ_EXCHANGE: ${RABBITMQ_EXCHANGE:-api_exchange}
 
   #     # JWT
-  #     JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
-  #     JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-your-super-secret-refresh-key-change-in-production}
-  #     JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-15m}
-  #     JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+  #     JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-accessTokenSecret}
+  #     JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-refreshTokenSecret}
+  #     JWT_ACCESS_EXPIRATION: ${JWT_ACCESS_EXPIRATION:-15m}
+  #     JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION:-7d}
 
   #     # Email
-  #     SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
-  #     SMTP_PORT: ${SMTP_PORT:-587}
-  #     SMTP_USER: ${SMTP_USER:-}
-  #     SMTP_PASSWORD: ${SMTP_PASSWORD:-}
-  #     SMTP_FROM: ${SMTP_FROM:-noreply@flashsale.com}
-  #     SMTP_FROM_NAME: ${SMTP_FROM_NAME:-Flash Sale Team}
-  #     SMTP_SECURE: ${SMTP_SECURE:-false}
-
-  #     # Reservation
-  #     RESERVATION_EXPIRY_MINUTES: ${RESERVATION_EXPIRY_MINUTES:-15}
-  #     MAX_RESERVATION_PER_USER: ${MAX_RESERVATION_PER_USER:-5}
-
-  #     # Rate Limiting
-  #     RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-900000}
-  #     RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-100}
-  #     RATE_LIMIT_RESERVATION_MAX: ${RATE_LIMIT_RESERVATION_MAX:-10}
+  #     MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
+  #     MAIL_PORT: ${MAIL_PORT:-587}
+  #     MAIL_USER: ${MAIL_USER:-}
+  #     MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+  #     MAIL_FROM: ${MAIL_FROM:-noreply@flashsale.com}
+  #     MAIL_FROM_NAME: ${MAIL_FROM_NAME:-Flash Sale Team}
 
   #     # CORS
   #     CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000,http://localhost:3001}
   #     CORS_CREDENTIALS: ${CORS_CREDENTIALS:-true}
 
   #     # Security
-  #     BCRYPT_ROUNDS: ${BCRYPT_ROUNDS:-10}
+  #     BCRYPT_SALT_ROUNDS: ${BCRYPT_SALT_ROUNDS:-10}
+  #     ENCRYPTION_KEY: ${ENCRYPTION_KEY:-your-32-char-encryption-key-here}
+
+  #     # Rate Limiting
+  #     RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-900000}
+  #     RATE_LIMIT_MAX_REQUESTS: ${RATE_LIMIT_MAX_REQUESTS:-100}
+  #     RATE_LIMIT_RESERVATION_MAX: ${RATE_LIMIT_RESERVATION_MAX:-10}
+
+  #     # Reservation
+  #     RESERVATION_EXPIRY_MINUTES: ${RESERVATION_EXPIRY_MINUTES:-15}
+  #     MAX_RESERVATION_PER_USER: ${MAX_RESERVATION_PER_USER:-5}
 
   #     # Logging
   #     LOG_LEVEL: ${LOG_LEVEL:-info}
+  #     LOG_DIR: ${LOG_DIR:-logs}
   #     LOG_FORMAT: ${LOG_FORMAT:-json}
 
   #     # Scheduler
@@ -130,7 +132,7 @@ services:
       - '${DB_PORT:-5966}:5432'
     volumes:
       - fs_pgData_dev:/var/lib/postgresql/data
-      - ./docker/postgres/init:/docker-entrypoint-initdb.d
+      # - ./docker/postgres/init:/docker-entrypoint-initdb.d
     networks:
       - fs-network-dev
     healthcheck:
@@ -183,26 +185,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # pgAdmin (Optional - for database management)
-  fs_pgadmin_dev:
-    image: dpage/pgadmin4:latest
-    container_name: fs_pgadmin_dev
-    restart: unless-stopped
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@example.com}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
-    ports:
-      - '${PGADMIN_PORT:-5050}:80'
-    volumes:
-      - fs_pgadmin_data:/var/lib/pgadmin
-    depends_on:
-      - fs_pg_dev
-    networks:
-      - fs-network-dev
-    profiles:
-      - tools
-
 networks:
   fs-network-dev:
     driver: bridge
@@ -215,5 +197,3 @@ volumes:
     name: fs_rdData_dev
   fs_rmqData_dev:
     name: fs_rmqData_dev
-  fs_pgadmin_data:
-    name: fs_pgadmin_data

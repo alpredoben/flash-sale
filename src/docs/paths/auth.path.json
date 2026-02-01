@@ -1,0 +1,58 @@
+{
+  "/auth/register": {
+    "post": {
+      "tags": ["Authentication"],
+      "summary": "Register User",
+      "requestBody": {
+        "required": false,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/RegisterBody"
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "OK",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResponseDefault"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/auth/login":{
+    "post": {
+      "tags": ["Authentication"],
+      "summary": "Register User",
+      "requestBody": {
+        "required": false,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/RegisterBody"
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "OK",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResponseDefault"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
