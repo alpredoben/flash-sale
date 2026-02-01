@@ -120,7 +120,6 @@ class QueueProcessor {
 
       await rabbitmqConfig.consume(queueName, async (data) => {
         logger.info(`Processing reservation: ${data.reservationId}`);
-        // Logika proses reservasi anda di sini
         this.updateStats();
       });
 
@@ -163,7 +162,6 @@ class QueueProcessor {
 
   private async handleEmailTask(data: any): Promise<void> {
     try {
-      // Integrasi dengan mailConfig anda
       await mailConfig.sendMail({
         to: data.to,
         subject: data.subject,
@@ -181,7 +179,6 @@ class QueueProcessor {
     error: unknown
   ): Promise<void> {
     try {
-      // Pastikan DLQ juga wujud sebelum publish
       await rabbitmqConfig.createQueue('dlq_queue', { durable: true });
 
       await rabbitmqConfig.publish('dlq_queue', {

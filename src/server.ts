@@ -15,8 +15,8 @@ import rateLimiterMiddleware from './shared/middlewares/rateLimiter.middleware';
 import apiResponse from '@utils/response.util';
 import apiRoute from '@routes/index';
 import errorMiddleware from '@middlewares/error.middleware';
-import expiredReservationJob from '@jobs/expired-reservation.job';
-import queueProcessor from '@queue/processor.queue';
+import expiredReservationJob from '@/events/jobs/expired-reservation.job';
+import queueProcessor from '@/events/queue/subscribers/processor.queue';
 
 class ApplicationServer {
   private app: Application;

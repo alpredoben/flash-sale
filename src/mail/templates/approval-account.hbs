@@ -1,0 +1,229 @@
+<!-- ===== ICON BADGE ===== -->
+<div
+  class='icon-badge-wrap'
+  style='text-align:center; margin-top:-36px; position:relative; z-index:1;'
+>
+  <div
+    class='icon-badge'
+    style='display:inline-flex; align-items:center; justify-content:center; width:72px; height:72px; border-radius:50%; background:#fff; box-shadow:0 4px 16px rgba(16,185,129,0.3); border:4px solid #ecfdf5;'
+  >
+    <svg
+      width='32'
+      height='32'
+      viewBox='0 0 24 24'
+      fill='none'
+      stroke='#10b981'
+      stroke-width='2'
+      stroke-linecap='round'
+      stroke-linejoin='round'
+    >
+      <path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z' />
+      <polyline points='9 12 11 14 15 10' />
+    </svg>
+  </div>
+</div>
+
+<!-- ===== TITLE & SUBTITLE ===== -->
+<h1
+  style='font-size:22px; font-weight:700; color:#1e293b; margin-bottom:10px; letter-spacing:-0.3px; margin-top:20px;'
+>Your Account Has Been Approved</h1>
+<p
+  class='subtitle'
+  style='font-size:14px; color:#64748b; max-width:440px; margin:0 auto 28px; line-height:1.7;'
+>
+  Great news,
+  <strong style='color:#1e293b;'>{{userName}}</strong>! Your account has been
+  reviewed and approved. You now have full access to all platform features.
+</p>
+
+<!-- ===== CTA BUTTON ===== -->
+<a
+  href='{{loginUrl}}'
+  class='btn-cta'
+  style='display:inline-block; background:linear-gradient(135deg,#10b981 0%,#34d399 100%); color:#fff !important; font-size:15px; font-weight:600; padding:14px 36px; border-radius:10px; text-decoration:none !important; letter-spacing:0.2px; box-shadow:0 4px 14px rgba(16,185,129,0.4);'
+>
+  Log In Now
+</a>
+
+<!-- ===== DIVIDER ===== -->
+<div
+  class='divider'
+  style='width:48px; height:3px; background:linear-gradient(90deg,#10b981,#34d399); border-radius:2px; margin:28px auto;'
+></div>
+
+<!-- ===== INFO CARD ===== -->
+<div
+  class='info-card'
+  style='background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:20px 24px; margin:0 auto 24px; max-width:420px; text-align:left;'
+>
+
+  <!-- Row: Account -->
+  <div
+    class='info-row'
+    style='display:flex; align-items:flex-start; gap:12px; padding:10px 0;'
+  >
+    <div
+      class='info-icon'
+      style='flex-shrink:0; width:36px; height:36px; border-radius:8px; background:#ecfdf5; display:flex; align-items:center; justify-content:center;'
+    >
+      <svg
+        width='18'
+        height='18'
+        viewBox='0 0 24 24'
+        fill='none'
+        stroke='#10b981'
+        stroke-width='2'
+        stroke-linecap='round'
+        stroke-linejoin='round'
+      >
+        <path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2' />
+        <circle cx='12' cy='7' r='4' />
+      </svg>
+    </div>
+    <div>
+      <div
+        class='info-label'
+        style='font-size:11px; font-weight:600; color:#94a3b8; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:2px;'
+      >Account Name</div>
+      <div
+        class='info-value'
+        style='font-size:13px; color:#334155; font-weight:500;'
+      >{{userName}}</div>
+    </div>
+  </div>
+
+  <!-- Row: Email -->
+  <div
+    class='info-row'
+    style='display:flex; align-items:flex-start; gap:12px; padding:10px 0; border-top:1px solid #e2e8f0;'
+  >
+    <div
+      class='info-icon'
+      style='flex-shrink:0; width:36px; height:36px; border-radius:8px; background:#ecfdf5; display:flex; align-items:center; justify-content:center;'
+    >
+      <svg
+        width='18'
+        height='18'
+        viewBox='0 0 24 24'
+        fill='none'
+        stroke='#10b981'
+        stroke-width='2'
+        stroke-linecap='round'
+        stroke-linejoin='round'
+      >
+        <path
+          d='M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z'
+        />
+        <polyline points='22,6 12,13 2,6' />
+      </svg>
+    </div>
+    <div>
+      <div
+        class='info-label'
+        style='font-size:11px; font-weight:600; color:#94a3b8; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:2px;'
+      >Email Address</div>
+      <div
+        class='info-value'
+        style='font-size:13px; color:#334155; font-weight:500;'
+      >{{recipientEmail}}</div>
+    </div>
+  </div>
+
+  <!-- Row: Status -->
+  <div
+    class='info-row'
+    style='display:flex; align-items:flex-start; gap:12px; padding:10px 0; border-top:1px solid #e2e8f0;'
+  >
+    <div
+      class='info-icon'
+      style='flex-shrink:0; width:36px; height:36px; border-radius:8px; background:#ecfdf5; display:flex; align-items:center; justify-content:center;'
+    >
+      <svg
+        width='18'
+        height='18'
+        viewBox='0 0 24 24'
+        fill='none'
+        stroke='#10b981'
+        stroke-width='2'
+        stroke-linecap='round'
+        stroke-linejoin='round'
+      >
+        <polyline points='20 6 9 17 4 12' />
+      </svg>
+    </div>
+    <div>
+      <div
+        class='info-label'
+        style='font-size:11px; font-weight:600; color:#94a3b8; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:2px;'
+      >Account Status</div>
+      <div
+        class='info-value'
+        style='font-size:13px; color:#10b981; font-weight:600;'
+      >✓ Approved & Active</div>
+    </div>
+  </div>
+
+  <!-- Row: Approved At -->
+  <div
+    class='info-row'
+    style='display:flex; align-items:flex-start; gap:12px; padding:10px 0; border-top:1px solid #e2e8f0;'
+  >
+    <div
+      class='info-icon'
+      style='flex-shrink:0; width:36px; height:36px; border-radius:8px; background:#ecfdf5; display:flex; align-items:center; justify-content:center;'
+    >
+      <svg
+        width='18'
+        height='18'
+        viewBox='0 0 24 24'
+        fill='none'
+        stroke='#10b981'
+        stroke-width='2'
+        stroke-linecap='round'
+        stroke-linejoin='round'
+      >
+        <circle cx='12' cy='12' r='10' />
+        <polyline points='12 6 12 12 16 14' />
+      </svg>
+    </div>
+    <div>
+      <div
+        class='info-label'
+        style='font-size:11px; font-weight:600; color:#94a3b8; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:2px;'
+      >Approved At</div>
+      <div
+        class='info-value'
+        style='font-size:13px; color:#334155; font-weight:500;'
+      >{{formatDate approvedAt 'long'}}</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== SUPPORT NOTE ===== -->
+<div
+  class='security-note'
+  style='background:#ecfdf5; border:1px solid #6ee7b7; border-radius:10px; padding:14px 18px; margin:24px auto 0; max-width:440px; display:flex; align-items:flex-start; gap:10px; text-align:left;'
+>
+  <div class='sec-icon' style='flex-shrink:0;'>
+    <svg
+      width='20'
+      height='20'
+      viewBox='0 0 24 24'
+      fill='none'
+      stroke='#10b981'
+      stroke-width='2'
+      stroke-linecap='round'
+      stroke-linejoin='round'
+    >
+      <path d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z' />
+    </svg>
+  </div>
+  <p style='font-size:12px; color:#064e3b; line-height:1.6;'>
+    <strong>Welcome aboard!</strong>
+    If you need any assistance getting started or have questions about your
+    account, feel free to
+    <a href='{{appUrl}}/support' style='color:#059669; font-weight:600;'>contact
+      our support team</a>.
+  </p>
+</div>

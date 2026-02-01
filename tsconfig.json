@@ -33,6 +33,9 @@
       "@models/*": [
         "src/database/models/*"
       ],
+      "@shared/*": [
+        "src/shared/*"
+      ],
       "@middlewares/*": [
         "src/shared/middlewares/*"
       ],
@@ -52,16 +55,19 @@
         "src/routes/*"
       ],
       "@jobs/*": [
-        "src/features/jobs/*"
+        "src/events/jobs/*"
       ],
       "@queue/*": [
-        "src/features/queue/*"
+        "src/events/queue/*"
       ],
       "@events/*": [
-        "src/features/events/*"
+        "src/events/*"
       ],
-      "@listeners/*": [
-        "src/features/listeners/*"
+      "@publishers/*": [
+        "src/events/queue/publishers/*"
+      ],
+      "@subscribers/*": [
+        "src/events/queue/subscribers/*"
       ],
       "@docs/*": [
         "src/docs/*"

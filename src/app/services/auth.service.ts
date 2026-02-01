@@ -16,7 +16,7 @@ import { Role } from '@/database/models/role.model';
 import tokenizer from '@utils/tokenizer.util';
 import caching from '@config/caching.config';
 import encryption from '@utils/encryption.util';
-import emailPublisher from '@/features/publisher/email.publisher';
+import emailPublisher from '@/events/queue/publishers/email.publisher';
 
 class AuthService {
   private static instance: AuthService;

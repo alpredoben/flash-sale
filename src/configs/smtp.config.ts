@@ -166,6 +166,7 @@ class MailSMTP {
         process.cwd(),
         'src',
         'mail',
+        'templates',
         `${templateName}.hbs`
       );
 
@@ -197,7 +198,6 @@ class MailSMTP {
         process.cwd(),
         'src',
         'mail',
-        'templates',
         'layouts',
         `${layoutName}.hbs`
       );

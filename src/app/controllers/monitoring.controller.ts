@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import expiredReservationScheduler from '@/features/jobs/expired-reservation.job.ts';
+import expiredReservationScheduler from '@/events/jobs/expired-reservation.job';
 import stockManagementService from '@services/stockManagement.service';
 import apiResponse from '@utils/response.util';
 import logger from '@utils/logger.util';
