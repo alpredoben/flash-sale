@@ -1,4 +1,4 @@
-import { body, param, ValidationChain } from 'express-validator';
+import { body, query, param, ValidationChain } from 'express-validator';
 import { reqValidation } from '@validators/validation';
 import lang from '@lang/index';
 
@@ -12,6 +12,12 @@ class RoleValidator {
       RoleValidator.instance = new RoleValidator();
     }
     return RoleValidator.instance;
+  }
+
+  private validationId() {
+    return param('id')
+      .notEmpty()
+      .withMessage(lang.__('error.validation.required', { field: `ID` }));
   }
 
   create(): ValidationChain[] {
@@ -57,7 +63,7 @@ class RoleValidator {
 
   update(): ValidationChain[] {
     return [
-      param('id').isUUID().withMessage('Role ID must be a valid UUID'),
+      this.validationId(),
 
       reqValidation('name', 'Role Name', 'body', true)
         .isLength({ min: 2, max: 50 })
@@ -100,16 +106,16 @@ class RoleValidator {
   }
 
   getById(): ValidationChain[] {
-    return [param('id').isUUID().withMessage('Role ID must be a valid UUID')];
+    return [this.validationId()];
   }
 
   delete(): ValidationChain[] {
-    return [param('id').isUUID().withMessage('Role ID must be a valid UUID')];
+    return [this.validationId()];
   }
 
   assignPermissions(): ValidationChain[] {
     return [
-      param('id').isUUID().withMessage('Role ID must be a valid UUID'),
+      this.validationId(),
 
       reqValidation('permissionIds', 'Permission IDs', 'body', false)
         .isArray({ min: 1 })
@@ -136,6 +142,10 @@ class RoleValidator {
         .isUUID()
         .withMessage('Each permission ID must be a valid UUID'),
     ];
+  }
+
+  fetchAll(): ValidationChain[] {
+    return [query('includePermissions').optional()];
   }
 }
 

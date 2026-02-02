@@ -193,11 +193,7 @@ class RoleController {
   }
 
   /** Delete role - [DELETE] /api/v1/roles/:id */
-  async deleteRole(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
+  async delete(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params;
       const deletedBy = req.user?.id;

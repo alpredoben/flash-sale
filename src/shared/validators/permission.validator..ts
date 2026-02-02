@@ -17,6 +17,12 @@ class PermissionValidator {
     return PermissionValidator.instance;
   }
 
+  private validationId() {
+    return param('id')
+      .notEmpty()
+      .withMessage(lang.__('error.validation.required', { field: `ID` }));
+  }
+
   create(): ValidationChain[] {
     return [
       body('name')
@@ -73,7 +79,7 @@ class PermissionValidator {
 
   update(): ValidationChain[] {
     return [
-      param('id').isUUID().withMessage('Permission ID must be a valid UUID'),
+      this.validationId(),
 
       body('name')
         .optional()
@@ -124,9 +130,7 @@ class PermissionValidator {
    * Validation for getting permission by ID
    */
   getById(): ValidationChain[] {
-    return [
-      param('id').isUUID().withMessage('Permission ID must be a valid UUID'),
-    ];
+    return [this.validationId()];
   }
 
   /**
@@ -160,9 +164,7 @@ class PermissionValidator {
    * Validation for deleting permission
    */
   delete(): ValidationChain[] {
-    return [
-      param('id').isUUID().withMessage('Permission ID must be a valid UUID'),
-    ];
+    return [this.validationId()];
   }
 
   /**
@@ -243,6 +245,43 @@ class PermissionValidator {
       body('actions.*')
         .isIn(Object.values(En_PermissionAction))
         .withMessage('Invalid permission action'),
+    ];
+  }
+
+  fetchAll(): ValidationChain[] {
+    return [
+      query('page')
+        .optional()
+        .isInt({ min: 1 })
+        .withMessage('Page must be a positive integer'),
+
+      query('limit')
+        .optional()
+        .isInt({ min: 1, max: 100 })
+        .withMessage('Limit must be between 1 and 100'),
+
+      query('search')
+        .optional()
+        .isString()
+        .withMessage('Search must be a string')
+        .trim(),
+
+      query('category')
+        .optional()
+        .isString()
+        .withMessage('Category must be a string')
+        .trim(),
+
+      query('resource')
+        .optional()
+        .isString()
+        .withMessage('Resource must be a string')
+        .trim(),
+
+      query('isActive')
+        .optional()
+        .isBoolean()
+        .withMessage('Is active must be a boolean'),
     ];
   }
 }
