@@ -1,6 +1,15 @@
 # Makefile for Flash Sale API
 # Author: Flash Sale Team
 # Description: Automation commands for development and production environments
+APP_DEV_NAME=fs_app_dev
+APP_PROD_NAME=fs_app_prod
+
+DB_DEV_NAME=fs_pg_dev
+DB_PROD_NAME=fs_pg_prod
+
+DB_NAME=db_flash_sale
+DB_USER=admin
+DB_PASS=QueenSQL
 
 .PHONY: help dev prod build-dev build-prod up-dev up-prod down-dev down-prod logs-dev logs-prod clean clean-all test db-migrate db-seed backup restore
 
@@ -70,11 +79,6 @@ dev-restart: ## Restart development environment
 dev-shell: ## Access development app container shell
 	docker compose -f docker-compose.dev.yml exec app sh
 
-dev-pgadmin: ## Start pgAdmin for database management
-	@echo "$(GREEN)Starting pgAdmin...$(NC)"
-	docker compose -f docker-compose.dev.yml --profile tools up -d pgadmin
-	@echo "$(GREEN)✓ pgAdmin is running at http://localhost:5050$(NC)"
-
 ##@ Production Environment
 
 prod: ## Start production environment
@@ -117,66 +121,121 @@ prod-nginx: ## Start production with Nginx
 	docker compose -f docker-compose.prod.yml --profile with-nginx up -d
 	@echo "$(GREEN)✓ Production with Nginx is running!$(NC)"
 
-##@ Database Management
+##@ Database Management (Mode Development)
+db-migrate-dev: ## Run database migrations
+	@echo "$(GREEN)Running database migrations...$(NC)"
+	docker compose -f docker-compose.dev.yml exec $(APP_DEV_NAME) npm run migration:run
+	@echo "$(GREEN)✓ Migrations completed$(NC)"
 
+db-migrate-create-dev: ## Create a new migration
+	@read -p "Enter migration name: " name; \
+	docker compose -f docker-compose.dev.yml exec $(APP_DEV_NAME) npm run migration:create src/database/migrations/$$name
+
+db-migrate-generate-dev: ## Generate migration from schema changes
+	@read -p "Enter migration name: " name; \
+	docker compose -f docker-compose.dev.yml exec $(APP_DEV_NAME) npm run migration:generate src/database/migrations/$$name
+
+db-revert-dev: ## Revert last migration
+	@echo "$(YELLOW)Reverting last migration...$(NC)"
+	docker compose -f docker-compose.dev.yml exec $(APP_DEV_NAME) npm run migration:revert
+	@echo "$(GREEN)✓ Migration reverted$(NC)"
+
+db-show-dev: ## Show all migrations
+	@echo "$(GREEN)Showing migrations...$(NC)"
+	docker compose -f docker-compose.dev.yml exec $(APP_DEV_NAME) npm run migration:show
+
+db-seed-dev: ## Seed database with initial data
+	@echo "$(GREEN)Seeding database...$(NC)"
+	docker compose -f docker-compose.dev.yml exec $(APP_DEV_NAME) npm run seed
+	@echo "$(GREEN)✓ Database seeded$(NC)"
+
+db-reset-dev: ## Reset database (drop and recreate)
+	@echo "$(RED)⚠ This will delete all data! Are you sure? [y/N]$(NC)" && read ans && [ $${ans:-N} = y ]
+	@echo "$(YELLOW)Resetting database...$(NC)"
+	docker compose -f docker-compose.dev.yml exec $(APP_DEV_NAME) npm run schema:drop
+	docker compose -f docker-compose.dev.yml exec $(APP_DEV_NAME) npm run migration:run
+	@echo "$(GREEN)✓ Database reset$(NC)"
+
+db-sync-dev: ## Synchronize database schema (DANGER: only for development)
+	@echo "$(RED)⚠ This will sync schema! Are you sure? [y/N]$(NC)" && read ans && [ $${ans:-N} = y ]
+	@echo "$(YELLOW)Synchronizing database schema...$(NC)"
+	docker compose -f docker-compose.dev.yml exec $(APP_DEV_NAME) npm run schema:sync
+	@echo "$(GREEN)✓ Schema synchronized$(NC)"
+
+db-console-dev: ## Access PostgreSQL console
+	docker compose -f docker-compose.dev.yml exec $(DB_DEV_NAME) psql -U $(DB_USER) -d $(DB_NAME)
+
+db-backup-dev: ## Backup database
+	@echo "$(GREEN)Creating database backup...$(NC)"
+	@mkdir -p ./backups
+	@docker compose -f docker-compose.dev.yml exec -T $(DB_DEV_NAME) pg_dump -U $(DB_USER) $(DB_NAME) > ./backups/backup_$$(date +%Y%m%d_%H%M%S).sql
+	@echo "$(GREEN)✓ Backup created in ./backups/$(NC)"
+
+db-restore-dev: ## Restore database from backup
+	@echo "$(YELLOW)Available backups:$(NC)"
+	@ls -lh ./backups/
+	@read -p "Enter backup filename: " filename; \
+	docker compose -f docker-compose.dev.yml exec -T $(DB_DEV_NAME) psql -U $(DB_USER) $(DB_NAME) < ./backups/$$filename
+	@echo "$(GREEN)✓ Database restored$(NC)"
+
+##@ Database Management (Mode Production)
 db-migrate: ## Run database migrations
 	@echo "$(GREEN)Running database migrations...$(NC)"
-	docker compose -f docker-compose.dev.yml exec app npm run migration:run
+	docker compose -f docker-compose.dev.yml exec $(APP_PROD_NAME) npm run migration:run
 	@echo "$(GREEN)✓ Migrations completed$(NC)"
 
 db-migrate-create: ## Create a new migration
 	@read -p "Enter migration name: " name; \
-	docker compose -f docker-compose.dev.yml exec app npm run migration:create src/database/migrations/$$name
+	docker compose -f docker-compose.dev.yml exec $(APP_PROD_NAME) npm run migration:create src/database/migrations/$$name
 
 db-migrate-generate: ## Generate migration from schema changes
 	@read -p "Enter migration name: " name; \
-	docker compose -f docker-compose.dev.yml exec app npm run migration:generate src/database/migrations/$$name
+	docker compose -f docker-compose.dev.yml exec $(APP_PROD_NAME) npm run migration:generate src/database/migrations/$$name
 
 db-revert: ## Revert last migration
 	@echo "$(YELLOW)Reverting last migration...$(NC)"
-	docker compose -f docker-compose.dev.yml exec app npm run migration:revert
+	docker compose -f docker-compose.dev.yml exec $(APP_PROD_NAME) npm run migration:revert
 	@echo "$(GREEN)✓ Migration reverted$(NC)"
 
 db-show: ## Show all migrations
 	@echo "$(GREEN)Showing migrations...$(NC)"
-	docker compose -f docker-compose.dev.yml exec app npm run migration:show
+	docker compose -f docker-compose.dev.yml exec $(APP_PROD_NAME) npm run migration:show
 
 db-seed: ## Seed database with initial data
 	@echo "$(GREEN)Seeding database...$(NC)"
-	docker compose -f docker-compose.dev.yml exec app npm run seed
+	docker compose -f docker-compose.dev.yml exec $(APP_PROD_NAME) npm run seed
 	@echo "$(GREEN)✓ Database seeded$(NC)"
 
 db-reset: ## Reset database (drop and recreate)
 	@echo "$(RED)⚠ This will delete all data! Are you sure? [y/N]$(NC)" && read ans && [ $${ans:-N} = y ]
 	@echo "$(YELLOW)Resetting database...$(NC)"
-	docker compose -f docker-compose.dev.yml exec app npm run schema:drop
-	docker compose -f docker-compose.dev.yml exec app npm run migration:run
+	docker compose -f docker-compose.dev.yml exec $(APP_PROD_NAME) npm run schema:drop
+	docker compose -f docker-compose.dev.yml exec $(APP_PROD_NAME) npm run migration:run
 	@echo "$(GREEN)✓ Database reset$(NC)"
 
 db-sync: ## Synchronize database schema (DANGER: only for development)
 	@echo "$(RED)⚠ This will sync schema! Are you sure? [y/N]$(NC)" && read ans && [ $${ans:-N} = y ]
 	@echo "$(YELLOW)Synchronizing database schema...$(NC)"
-	docker compose -f docker-compose.dev.yml exec app npm run schema:sync
+	docker compose -f docker-compose.dev.yml exec $(APP_PROD_NAME) npm run schema:sync
 	@echo "$(GREEN)✓ Schema synchronized$(NC)"
 
 db-console: ## Access PostgreSQL console
-	docker compose -f docker-compose.dev.yml exec postgres psql -U postgres -d flashsale_db
+	docker compose -f docker-compose.dev.yml exec $(DB_PROD_NAME) psql -U $(DB_USER) -d $(DB_NAME)
 
 db-backup: ## Backup database
 	@echo "$(GREEN)Creating database backup...$(NC)"
 	@mkdir -p ./backups
-	@docker compose -f docker-compose.dev.yml exec -T postgres pg_dump -U postgres flashsale_db > ./backups/backup_$$(date +%Y%m%d_%H%M%S).sql
+	@docker compose -f docker-compose.dev.yml exec -T $(DB_PROD_NAME) pg_dump -U $(DB_USER) $(DB_NAME) > ./backups/backup_$$(date +%Y%m%d_%H%M%S).sql
 	@echo "$(GREEN)✓ Backup created in ./backups/$(NC)"
 
 db-restore: ## Restore database from backup
 	@echo "$(YELLOW)Available backups:$(NC)"
 	@ls -lh ./backups/
 	@read -p "Enter backup filename: " filename; \
-	docker compose -f docker-compose.dev.yml exec -T postgres psql -U postgres flashsale_db < ./backups/$$filename
+	docker compose -f docker-compose.dev.yml exec -T $(DB_PROD_NAME) psql -U $(DB_USER) $(DB_NAME) < ./backups/$$filename
 	@echo "$(GREEN)✓ Database restored$(NC)"
 
 ##@ Testing
-
 test: ## Run all tests
 	@echo "$(GREEN)Running tests...$(NC)"
 	docker compose -f docker-compose.dev.yml exec app npm test
