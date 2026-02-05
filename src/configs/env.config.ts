@@ -26,12 +26,15 @@ class EnvironmentConfig {
   public readonly dbDatabase: string;
   public readonly dbSynchronize: boolean;
   public readonly dbLogging: boolean;
+  public readonly dbMinPool: number;
+  public readonly dbMaxPool: number;
 
   // Redis
   public readonly redisHost: string;
   public readonly redisPort: number;
   public readonly redisPassword: string;
   public readonly redisDb: number;
+  public readonly redisTtl: number;
 
   // JWT
   public readonly jwtAccessSecret: string;
@@ -46,6 +49,7 @@ class EnvironmentConfig {
   // Rate Limiting
   public readonly rateLimitWindowMs: number;
   public readonly rateLimitMaxRequests: number;
+  public readonly rateLimitReservationMax: number;
 
   // CORS
   public readonly corsOrigin: string[];
@@ -88,14 +92,20 @@ class EnvironmentConfig {
   // Session
   public readonly sessionSecret: string;
 
+  public readonly defaultPageSize: number;
+
+  public readonly maxPageSize: number;
+
   private constructor() {
     // Application
-    this.appLang = process.env.APP_LANGUAGE ?? 'en';
-    this.nodeEnv = process.env.NODE_ENV ?? 'development';
-    this.appName = process.env.APP_NAME ?? 'Professional-REST-API';
-    this.appPort = parseInt(process.env.APP_PORT ?? '3000', 10);
+    this.appName = process.env.APP_NAME ?? 'Professional Rest API';
     this.appUrl = process.env.APP_URL ?? 'http://localhost:3000';
     this.apiVersion = process.env.API_VERSION ?? 'v1';
+    this.appLang = process.env.APP_LANGUAGE ?? 'en';
+
+    // Setting
+    this.nodeEnv = process.env.NODE_ENV ?? 'development';
+    this.appPort = parseInt(process.env.APP_PORT ?? '3000', 10);
 
     // Database
     this.dbHost = process.env.DB_HOST ?? 'localhost';
@@ -105,12 +115,23 @@ class EnvironmentConfig {
     this.dbDatabase = process.env.DB_DATABASE ?? 'db_flash_sale';
     this.dbSynchronize = process.env.DB_SYNCHRONIZE === 'true';
     this.dbLogging = process.env.DB_LOGGING === 'true';
+    this.dbMinPool = parseInt(process.env.DB_POOL_MIN ?? '2', 10);
+    this.dbMaxPool = parseInt(process.env.DB_POOL_MAX ?? '2', 10);
 
     // Redis
     this.redisHost = process.env.REDIS_HOST ?? 'localhost';
     this.redisPort = parseInt(process.env.REDIS_PORT ?? '6379', 10);
     this.redisPassword = process.env.REDIS_PASSWORD ?? '';
     this.redisDb = parseInt(process.env.REDIS_DB ?? '0', 10);
+    this.redisTtl = parseInt(process.env.REDIS_TTL ?? '3600', 10);
+
+    // RabbitMQ
+    this.rabbitmqHost = process.env.RABBITMQ_HOST ?? 'localhost';
+    this.rabbitmqPort = parseInt(process.env.RABBITMQ_PORT ?? '5672', 10);
+    this.rabbitmqUser = process.env.RABBITMQ_USER ?? 'guest';
+    this.rabbitmqPassword = process.env.RABBITMQ_PASSWORD ?? 'guest';
+    this.rabbitmqVhost = process.env.RABBITMQ_VHOST ?? '/';
+    this.rabbitmqExchange = process.env.RABBITMQ_EXCHANGE ?? 'api_exchange';
 
     // JWT
     this.jwtAccessSecret = process.env.JWT_ACCESS_SECRET ?? 'change-me-access';
@@ -118,6 +139,20 @@ class EnvironmentConfig {
       process.env.JWT_REFRESH_SECRET ?? 'change-me-refresh';
     this.jwtAccessExpiration = process.env.JWT_ACCESS_EXPIRATION ?? '15m';
     this.jwtRefreshExpiration = process.env.JWT_REFRESH_EXPIRATION ?? '7d';
+
+    // Email
+    this.mailHost = process.env.MAIL_HOST ?? 'smtp.mailtrap.io';
+    this.mailPort = parseInt(process.env.MAIL_PORT ?? '2525', 10);
+    this.mailUser = process.env.MAIL_USER ?? '';
+    this.mailPassword = process.env.MAIL_PASSWORD ?? '';
+    this.mailFrom = process.env.MAIL_FROM ?? 'noreply@app.com';
+    this.mailFromName = process.env.MAIL_FROM_NAME ?? 'App';
+
+    // CORS
+    this.corsOrigin = process.env.CORS_ORIGIN?.split(',') || [
+      'http://localhost:3000',
+    ];
+    this.corsCredentials = process.env.CORS_CREDENTIALS === 'true';
 
     // Encryption
     this.bcryptSaltRounds = parseInt(
@@ -137,38 +172,8 @@ class EnvironmentConfig {
       10
     );
 
-    // CORS
-    this.corsOrigin = process.env.CORS_ORIGIN?.split(',') || [
-      'http://localhost:3000',
-    ];
-    this.corsCredentials = process.env.CORS_CREDENTIALS === 'true';
-
-    // Email
-    this.mailHost = process.env.MAIL_HOST ?? 'smtp.mailtrap.io';
-    this.mailPort = parseInt(process.env.MAIL_PORT ?? '2525', 10);
-    this.mailUser = process.env.MAIL_USER ?? '';
-    this.mailPassword = process.env.MAIL_PASSWORD ?? '';
-    this.mailFrom = process.env.MAIL_FROM ?? 'noreply@app.com';
-    this.mailFromName = process.env.MAIL_FROM_NAME ?? 'App';
-
-    // RabbitMQ
-    this.rabbitmqHost = process.env.RABBITMQ_HOST ?? 'localhost';
-    this.rabbitmqPort = parseInt(process.env.RABBITMQ_PORT ?? '5672', 10);
-    this.rabbitmqUser = process.env.RABBITMQ_USER ?? 'guest';
-    this.rabbitmqPassword = process.env.RABBITMQ_PASSWORD ?? 'guest';
-    this.rabbitmqVhost = process.env.RABBITMQ_VHOST ?? '/';
-    this.rabbitmqExchange = process.env.RABBITMQ_EXCHANGE ?? 'api_exchange';
-
-    // Captcha
-    this.captchaEnabled = process.env.CAPTCHA_ENABLED === 'true';
-    this.captchaSize = parseInt(process.env.CAPTCHA_SIZE || '6', 10);
-    this.captchaNoise = parseInt(process.env.CAPTCHA_NOISE || '2', 10);
-
-    // Monitoring
-    this.metricsEnabled = process.env.METRICS_ENABLED === 'true';
-    this.tracingEnabled = process.env.TRACING_ENABLED === 'true';
-    this.otelExporterEndpoint =
-      process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://localhost:4318';
+    this.rateLimitReservationMax =
+      Number(process.env.RATE_LIMIT_RESERVATION_MAX) ?? 10;
 
     // Logging
     this.logLevel = process.env.LOG_LEVEL ?? 'info';
@@ -180,6 +185,10 @@ class EnvironmentConfig {
 
     // Session
     this.sessionSecret = process.env.SESSION_SECRET ?? 'change-me-session';
+
+    this.defaultPageSize = Number(process.env.DEFAULT_PAGE_SIZE) ?? 10;
+
+    this.maxPageSize = Number(process.env.MAX_PAGE_SIZE) ?? 160;
 
     this.validate();
   }

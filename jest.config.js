@@ -4,7 +4,13 @@ module.exports = {
   roots: ['<rootDir>/src', '<rootDir>/tests'],
   testMatch: ['**/__tests__/**/*.ts', '**/?(*.)+(spec|test).ts'],
   transform: {
-    '^.+\\.ts$': 'ts-jest',
+    '^.+\\.ts$': ['ts-jest', {
+      tsconfig: {
+        esModuleInterop: true,
+        allowSyntheticDefaultImports: true,
+        types: ['jest', 'node'],
+      },
+    }],
   },
   collectCoverageFrom: [
     'src/**/*.ts',
@@ -13,10 +19,13 @@ module.exports = {
     '!src/**/*.enum.ts',
     '!src/**/*.constant.ts',
     '!src/server.ts',
+    '!src/debug.ts',
     '!src/types/**',
+    '!src/database/migrations/**',
+    '!src/database/seeders/**',
   ],
   coverageDirectory: 'coverage',
-  coverageReporters: ['text', 'lcov', 'html'],
+  coverageReporters: ['text', 'lcov', 'html', 'json'],
   coverageThreshold: {
     global: {
       branches: 70,
@@ -54,12 +63,16 @@ module.exports = {
   clearMocks: true,
   resetMocks: true,
   restoreMocks: true,
+  // Improved error handling
+  bail: false,
+  maxWorkers: '50%',
+  // Cache configuration
+  cache: true,
+  cacheDirectory: '<rootDir>/.jest-cache',
+  // Global setup
   globals: {
     'ts-jest': {
-      tsconfig: {
-        esModuleInterop: true,
-        allowSyntheticDefaultImports: true,
-      },
+      isolatedModules: true,
     },
   },
 };

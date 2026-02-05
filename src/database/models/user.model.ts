@@ -39,8 +39,8 @@ export class User extends AppBaseEntity {
   @Column({ type: 'varchar', length: 20, nullable: true })
   phone?: string;
 
-  @Column({ type: 'varchar', length: 500, nullable: true })
-  avatar?: string;
+  @Column({ type: 'text', length: 500, nullable: true })
+  avatar?: string | null;
 
   @Column({ name: 'email_verified', type: 'boolean', default: false })
   emailVerified: boolean;
@@ -91,7 +91,7 @@ export class User extends AppBaseEntity {
   passwordResetExpires?: Date | null;
 
   @Column({ name: 'last_login', type: 'timestamp', nullable: true })
-  lastLogin?: Date;
+  lastLogin?: Date | null;
 
   @Column({
     name: 'email_verification_at',

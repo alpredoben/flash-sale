@@ -498,4 +498,5 @@ class ReservationService {
   }
 }
 
+export { ReservationService };
 export default ReservationService.getInstance();
